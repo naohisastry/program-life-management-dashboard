@@ -67,5 +67,11 @@
 
 ---
 
-## 📜 ライセンス
-本リポジトリのコードおよび成果物は [MIT License](LICENSE) の下で公開されています。
+## 📄 License / ライセンス
+
+- **Code**（HTML / CSS / JavaScript）: [MIT License](LICENSE)
+- **Content**（文章・図表・分析結果・整理済みデータ）: [CC BY 4.0](LICENSE-CONTENT.md)
+- 出典表示例 / Attribution: Naohisa Hashimoto, "program-life-management-dashboard", https://naohisastry.github.io/program-life-management-dashboard/
+- 第三者の元データの権利は各発行元に帰属します。 / Third-party source data remain the property of their original publishers.
+
+© 2026 Naohisa Hashimoto
