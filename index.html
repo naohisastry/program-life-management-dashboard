@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>番組軸PLM 資産ポートフォリオ・ダッシュボード v1.19（FY2025・87番組）</title>
+<meta name="description" content="テレビ番組を資産ポートフォリオとして俯瞰し、任意の1本へ掘り下げる。v3.0パイプライン正データ（実編成84＋架空3＝87番組）。">
+<meta name="author" content="naohisastry">
+
+<!-- OGP Settings (共通ナレッジ準拠) -->
+<meta property="og:site_name" content="Program Life Management (Naohisa Hashimoto Media Architecture Research)">
+<meta property="og:title" content="番組軸PLM 資産ポートフォリオ・ダッシュボード v1.19">
+<meta property="og:description" content="テレビ番組を資産ポートフォリオとして俯瞰し、任意の1本へ掘り下げる。v3.0パイプライン正データ（実編成84＋架空3＝87番組）。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://naohisastry.github.io/program-life-management-dashboard/">
+<meta property="og:image" content="https://naohisastry.github.io/program-life-management-dashboard/social-preview.png">
+<meta property="og:image:secure_url" content="https://naohisastry.github.io/program-life-management-dashboard/social-preview.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:image" content="https://naohisastry.github.io/program-life-management-dashboard/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="番組軸PLM 資産ポートフォリオ・ダッシュボード v1.19">
+<meta name="twitter:description" content="テレビ番組を資産ポートフォリオとして俯瞰し、任意の1本へ掘り下げる。v3.0パイプライン正データ（実編成84＋架空3＝87番組）。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg-main:#060913;
+  --bg-card:rgba(13,20,38,0.45);
+  --bg-card-hover:rgba(20,30,58,0.6);
+  --border-color:rgba(255,255,255,0.08);
+  --border-hover:rgba(59,130,246,0.3);
+  --text-primary:#f1f5f9; --text-secondary:#94a3b8; --text-muted:#64748b;
+  --accent-blue:#3b82f6; --accent-blue-glow:rgba(59,130,246,0.15);
+  --accent-purple:#a855f7; --accent-green:#10b981; --accent-red:#ef4444;
+  --accent-orange:#f97316; --accent-yellow:#eab308; --accent-cyan:#22d3ee; --accent-pink:#f472b6;
+  --font-sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+  --font-mono:'Space Grotesk',monospace;
+  --card-shadow:0 8px 32px 0 rgba(0,0,0,0.37);
+  --card-blur:blur(16px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:120%}   /* 全体を約1.2倍に拡大（rem基準で一括スケール） */
+body{background-color:var(--bg-main);color:var(--text-primary);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;line-height:1.5;padding-bottom:2rem}
+.glow-container{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;overflow:hidden;pointer-events:none}
+.glow-orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:0.12;mix-blend-mode:screen;animation:float 20s infinite alternate}
+.orb-1{top:-10%;left:10%;width:50vw;height:50vw;background:radial-gradient(circle,var(--accent-blue) 0%,transparent 80%)}
+.orb-2{bottom:-10%;right:10%;width:45vw;height:45vw;background:radial-gradient(circle,var(--accent-purple) 0%,transparent 80%);animation-delay:-5s}
+@keyframes float{0%{transform:translate(0,0) scale(1)}100%{transform:translate(5%,5%) scale(1.05)}}
+.gradient-text{background:linear-gradient(135deg,#60a5fa 0%,#a78bfa 50%,#f472b6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:0.75rem;font-weight:600;letter-spacing:0.1em;color:var(--accent-blue);background:rgba(59,130,246,0.1);padding:0.25rem 0.75rem;border-radius:100px;border:1px solid rgba(59,130,246,0.2);margin-bottom:0.75rem;text-transform:uppercase}
+/* Unified Header & Footer (共通ナレッジスタイル) */
+.app-header{padding:0.65rem 5%;border-bottom:1px solid var(--border-color);background:rgba(6,9,19,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.header-content{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:0.4rem}
+.header-row-main{display:flex;justify-content:space-between;align-items:flex-start;gap:1.5rem}
+.header-text-area{display:flex;flex-direction:column;gap:0.25rem;flex:1}
+.app-header h1{font-size:1.15rem;font-weight:700;letter-spacing:-0.01em;line-height:1.35;margin:0;color:#f1f5f9}
+.gradient-title{background:linear-gradient(135deg,#93c5fd 0%,#c7d2fe 45%,#6ee7b7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header-desc{font-size:0.76rem;color:var(--text-secondary);line-height:1.45;margin:0;max-width:1100px}
+.header-version{text-align:right;white-space:nowrap;padding-top:0.15rem;display:flex;flex-direction:column;align-items:flex-end;gap:0.2rem;flex-shrink:0}
+.version-tag{font-family:var(--font-mono);font-size:0.72rem;font-weight:600;color:#94a3b8;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:0.2rem 0.55rem;border-radius:6px}
+.version-date{font-family:var(--font-mono);font-size:0.65rem;color:#64748b}
+
+.app-footer{border-top:1px solid rgba(255,255,255,0.08);background:rgba(6,9,19,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);margin-top:4rem;padding:1.5rem 0}
+.footer-container{max-width:1400px;margin:0 auto;padding:0 1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.35rem;text-align:center}
+.footer-title{font-size:0.78rem;color:#94a3b8;font-weight:500}
+.footer-sub{font-size:0.72rem;color:#64748b}
+#footer-line{font-family:var(--font-mono);font-size:0.72rem;color:#64748b;margin-top:0.2rem}
+.header-content{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem}
+h1{font-size:1.6rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.25rem}
+.subtitle{font-size:0.85rem;color:var(--text-secondary)}
+.control-panel{display:flex;gap:1rem;flex-wrap:wrap}
+.control-group{display:flex;flex-direction:column;gap:0.35rem}
+.control-group label{font-family:var(--font-mono);font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em}
+.custom-select{background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-primary);padding:0.5rem 1rem;border-radius:8px;outline:none;cursor:pointer;font-weight:600;font-family:var(--font-sans);transition:all 0.3s;max-width:320px}
+.custom-select:hover,.custom-select:focus{border-color:var(--border-hover);box-shadow:0 0 10px var(--accent-blue-glow)}
+.custom-input{background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-primary);padding:0.4rem 0.8rem;border-radius:8px;outline:none;font-family:var(--font-sans);font-size:0.8rem;width:100%}
+.custom-input:focus{border-color:var(--border-hover)}
+.toggle-btn-group{display:flex;background:var(--bg-card);border:1px solid var(--border-color);border-radius:8px;padding:0.15rem}
+.toggle-btn{background:transparent;border:none;color:var(--text-secondary);padding:0.35rem 1rem;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem;font-family:var(--font-sans);transition:all 0.3s}
+.toggle-btn.active{background:var(--accent-blue);color:var(--text-primary);box-shadow:0 4px 12px var(--accent-blue-glow)}
+.dashboard-grid{max-width:1400px;margin:2rem auto;padding:0 5%;display:grid;grid-template-columns:1fr;gap:2rem}
+.kpi-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1.2rem}
+.kpi-card{background:var(--bg-card);border:1px solid var(--border-color);backdrop-filter:var(--card-blur);border-radius:16px;padding:1.25rem;display:flex;align-items:center;gap:1rem;box-shadow:var(--card-shadow);transition:all 0.3s}
+.kpi-card:hover{transform:translateY(-2px);border-color:var(--border-hover);background:var(--bg-card-hover)}
+.kpi-icon{font-size:1.8rem;background:rgba(255,255,255,0.03);width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-color);flex-shrink:0}
+.kpi-data{display:flex;flex-direction:column}
+.kpi-label{font-size:0.82rem;color:var(--text-primary);font-weight:700;letter-spacing:0.01em}
+.kpi-value{font-size:1.45rem;font-weight:800;letter-spacing:-0.01em;color:var(--text-primary);margin:0.1rem 0}
+.kpi-subtext{font-size:0.65rem;color:var(--text-muted);margin-top:0.1rem}
+.chart-section{display:grid;grid-template-columns:2fr 1fr;gap:1.5rem}
+.chart-section.half{grid-template-columns:1fr 1fr}
+@media(max-width:1024px){.chart-section,.chart-section.half{grid-template-columns:1fr}}
+.chart-card{background:var(--bg-card);border:1px solid var(--border-color);backdrop-filter:var(--card-blur);border-radius:16px;padding:1.5rem;box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:1rem;min-width:0}
+.chart-header h2{font-size:1.1rem;font-weight:700;margin-bottom:0.15rem}
+.chart-desc{font-size:0.75rem;color:var(--text-secondary)}
+.chart-wrapper{position:relative;width:100%;height:380px}
+.chart-wrapper.short{height:300px}
+.chart-wrapper.mini{height:210px}
+table{width:100%;border-collapse:collapse;font-size:0.78rem}
+th{font-family:var(--font-mono);font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);text-align:left;padding:0.5rem 0.6rem;border-bottom:1px solid var(--border-color);white-space:nowrap}
+td{padding:0.5rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top;color:var(--text-secondary)}
+td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1,"lnum" 1}
+td .pos{color:var(--accent-green);font-weight:700}
+td .neg{color:var(--accent-red);font-weight:700}
+.defs{font-size:0.7rem;color:var(--text-muted);line-height:1.55;border-top:1px dotted var(--border-color);padding-top:0.6rem}
+.defs b{color:var(--text-secondary)}
+.note-strip{background:rgba(234,179,8,0.07);border:1px solid rgba(234,179,8,0.25);border-radius:10px;padding:0.6rem 0.9rem;font-size:0.72rem;color:#d8c07a}
+.note-strip.green{background:rgba(16,185,129,0.06);border-color:rgba(16,185,129,0.25);color:#7fd6b3}
+.note-strip.blue{background:rgba(59,130,246,0.06);border-color:rgba(59,130,246,0.25);color:#93b6f5}
+.note-strip.plain{background:rgba(148,163,184,0.06);border-color:rgba(148,163,184,0.22);color:var(--text-secondary)}
+.note-strip.plain .es-line{line-height:1.55;margin:0.08rem 0}
+.note-strip.plain .es-line b{color:var(--text-primary)}
+.src-list{font-size:0.74rem;color:var(--text-secondary);line-height:1.7}
+.src-list li{margin-left:1.2rem}
+.tab-big{display:flex;flex-direction:column;align-items:flex-start;gap:0.1rem;background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-secondary);padding:0.55rem 1.4rem;border-radius:12px;cursor:pointer;font-family:var(--font-sans);font-size:0.95rem;font-weight:700;transition:all 0.25s}
+.tab-big .tab-sub{font-size:0.62rem;font-weight:500;color:var(--text-muted)}
+.tab-big:hover{border-color:var(--border-hover)}
+.tab-big.active{background:var(--accent-blue);color:#fff;border-color:var(--accent-blue);box-shadow:0 4px 16px var(--accent-blue-glow)}
+.tab-big.active .tab-sub{color:rgba(255,255,255,0.75)}
+.chip-group{display:flex;flex-wrap:wrap;gap:0.35rem}
+.filter-bar{display:flex;flex-wrap:wrap;gap:0.5rem 1.3rem;align-items:center}
+.filter-bar .control-group{flex-direction:row;align-items:center;gap:0.45rem}
+.filter-bar .control-group>label{white-space:nowrap;margin:0}
+.chip{background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-secondary);padding:0.22rem 0.7rem;border-radius:100px;cursor:pointer;font-size:0.72rem;font-weight:600;font-family:var(--font-sans);transition:all 0.2s;user-select:none}
+.chip:hover{border-color:var(--border-hover)}
+.chip.on{background:var(--accent-blue);color:var(--text-primary);border-color:var(--accent-blue);box-shadow:0 2px 8px var(--accent-blue-glow)}
+.chip.all{font-family:var(--font-mono)}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--accent-blue)}
+.app-footer-bar{text-align:center;padding:2rem;font-size:0.75rem;color:var(--text-muted);border-top:1px solid var(--border-color);margin-top:4rem}
+/* ==== v0.19 additions ==== */
+.tagx{display:inline-block;border-radius:5px;font-size:0.62rem;padding:0.05rem 0.4rem;font-family:var(--font-mono);font-weight:700;white-space:nowrap;border:1px solid;vertical-align:middle}
+.tag-fic{background:rgba(234,179,8,0.14);color:#eab308;border-color:rgba(234,179,8,0.45)}
+.tag-real{background:rgba(16,185,129,0.1);color:#34d399;border-color:rgba(16,185,129,0.3)}
+.tag-genre{border-color:transparent;color:#0b1020;font-weight:800}
+.tag-tier{border-color:transparent;color:#0b1020;font-weight:800}
+.tag-conf{border-color:transparent;color:#0b1020;font-weight:800}
+.tag-missing{background:rgba(148,163,184,0.12);color:#94a3b8;border-color:rgba(148,163,184,0.4)}
+.tag-obj{background:rgba(34,211,238,0.12);color:#22d3ee;border-color:rgba(34,211,238,0.4)}
+.prog-row{display:flex;justify-content:space-between;align-items:center;gap:0.6rem;padding:0.5rem 0.7rem;background:rgba(255,255,255,0.02);border:1px solid var(--border-color);border-radius:10px;cursor:pointer;transition:all 0.2s;margin-bottom:0.45rem}
+.prog-row:hover{background:rgba(255,255,255,0.05);border-color:var(--border-hover)}
+.prog-row.sel{border-color:var(--accent-blue);box-shadow:0 0 8px var(--accent-blue-glow)}
+.prog-row .nm{font-weight:700;font-size:0.78rem;line-height:1.3}
+.prog-row .meta{font-size:0.62rem;color:var(--text-muted);margin-top:0.15rem;display:flex;gap:0.3rem;flex-wrap:wrap;align-items:center}
+.prog-row .val{font-weight:800;font-size:0.82rem;white-space:nowrap}
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:0.5rem}
+.prog-grid .prog-row{margin-bottom:0}
+.prog-table{width:100%;border-collapse:collapse;font-size:0.78rem}
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap;transition:color 0.15s}
+th.sortable:hover{color:var(--text-primary)}
+th.sorted{color:var(--accent-blue)}
+th .sort-ind{font-size:0.62rem}
+.prog-table th.sortable{cursor:pointer;user-select:none;white-space:nowrap;transition:color 0.15s}
+.prog-table th.sortable:hover{color:var(--text-primary)}
+.prog-table th.sorted{color:var(--accent-blue)}
+.prog-table th .sort-ind{font-size:0.62rem}
+.prog-table tbody tr.prog-tr{cursor:pointer;transition:background 0.15s}
+.prog-table tbody tr.prog-tr:hover{background:rgba(255,255,255,0.05)}
+.prog-table tbody tr.prog-tr.sel{background:var(--accent-blue-glow);box-shadow:inset 3px 0 0 var(--accent-blue)}
+.prog-table td .pt-nm{font-weight:700;color:var(--text-primary)}
+.prog-table td{white-space:nowrap}
+.hbar-row{display:grid;grid-template-columns:minmax(120px,1.1fr) 2fr auto;gap:0.5rem;align-items:center;font-size:0.74rem;margin-bottom:0.35rem}
+.hbar-row .lbl{color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar-track{background:rgba(255,255,255,0.04);border-radius:5px;height:14px;overflow:hidden}
+.hbar-fill{height:100%;border-radius:5px}
+.hbar-val{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-secondary);white-space:nowrap}
+.split-panel{border-radius:14px;border:1px solid;padding:1rem 1.1rem;display:flex;flex-direction:column;gap:0.7rem;min-width:0}
+.split-panel.realside{border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.04)}
+.split-panel.ficside{border-color:rgba(234,179,8,0.35);background:rgba(234,179,8,0.045)}
+.split-panel h3{font-size:0.95rem}
+.bignum{font-size:1.6rem;font-weight:800}
+.legend-inline{display:flex;flex-wrap:wrap;gap:0.5rem;font-size:0.68rem;color:var(--text-secondary)}
+.legend-inline .sw{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:0.25rem;vertical-align:middle}
+.karte-head{display:flex;align-items:baseline;gap:0.7rem;flex-wrap:wrap}
+.ttl{font-size:1.15rem;font-weight:800;line-height:1.35}
+.idm{font-family:var(--font-mono);font-size:0.7rem;color:var(--text-muted)}
+.scroll-y{overflow-y:auto;overflow-x:auto}
+.pill-btn{background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-secondary);border-radius:8px;padding:0.35rem 0.9rem;cursor:pointer;font-family:var(--font-sans);font-weight:600;font-size:0.78rem;transition:all 0.2s}
+.pill-btn:hover{border-color:var(--border-hover);color:var(--text-primary)}
+.p5chip{font-family:var(--font-mono);font-size:0.64rem;font-weight:700;border-radius:5px;padding:0.05rem 0.45rem;border:1px solid}
+.p5chip.pass{background:rgba(16,185,129,0.12);color:#34d399;border-color:rgba(16,185,129,0.35)}
+.p5chip.warn{background:rgba(234,179,8,0.12);color:#eab308;border-color:rgba(234,179,8,0.45)}
+</style>
+</head>
+<body>
+<div class="glow-container"><div class="glow-orb orb-1"></div><div class="glow-orb orb-2"></div></div>
+
+<!-- Header (共通ナレッジスタイル Unified Header) -->
+<header class="app-header">
+  <div class="header-content">
+    <div class="header-row-main">
+      <div class="header-text-area">
+        <h1>
+          <span class="gradient-title">Program Life Management Dashboard</span>
+        </h1>
+        <p class="header-desc">
+          本ダッシュボードは、番組に関連する収支情報を極力現実事情に即して仮想データベースとして構築したうえで、個別番組ごとの投資対効果を可視化しているものです。可視化することで、各番組が経営に対する影響因子を特定して、今後の取り扱い指針を具体的に指し示せるようにする。特に、いままで把握していない「テール収支（放送後の放送関連収益）」を明らかにすることでIPとしての番組育成の視点や「Program Life Management」という経営指標の導入の重要性を体感できるツールです。
+        </p>
+      </div>
+      <div class="header-version">
+        <span class="version-tag">Ver 1.19</span>
+        <span class="version-date">2026.10</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav style="border-bottom:1px solid var(--border-color);background:rgba(6,9,19,0.75);backdrop-filter:blur(8px)">
+  <div style="max-width:1400px;margin:0 auto;padding:0.7rem 5%;display:flex;gap:0.6rem;flex-wrap:wrap">
+    <button class="tab-big active" data-tab="overview">📊 経営俯瞰</button>
+    <button class="tab-big" data-tab="karte">🔬 番組カルテ</button>
+    <button class="tab-big" data-tab="variance">⚖️ 予実・健全性</button>
+    <div id="year-select-wrap" style="margin-left:auto;display:none;align-items:center;gap:0.4rem">
+      <label for="year-select" style="font-size:0.78rem;color:var(--text-muted)">対象年度</label>
+      <select id="year-select" class="custom-select" style="padding:0.3rem 0.7rem;font-size:0.82rem"></select>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ TAB 1: OVERVIEW ============ -->
+<main class="dashboard-grid" id="main-overview">
+  <section class="kpi-container" aria-label="全社KPI">
+    <div class="kpi-card"><div class="kpi-icon">💸</div><div class="kpi-data">
+      <span class="kpi-label">支出実績</span><span class="kpi-value" id="k-exp"></span><span class="kpi-subtext">会計実績＋管理会計配賦（経済価値推計は除外）</span></div></div>
+    <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-data">
+      <span class="kpi-label">収入実績</span><span class="kpi-value" id="k-rev"></span><span class="kpi-subtext">一次流通＋配信＋テール</span></div></div>
+    <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-data">
+      <span class="kpi-label">通期収支</span><span class="kpi-value" id="k-net" style="color:var(--accent-green)"></span><span class="kpi-subtext" id="k-net-sub"></span></div></div>
+    <div class="kpi-card"><div class="kpi-icon">🌊</div><div class="kpi-data">
+      <span class="kpi-label">テール収入</span><span class="kpi-value" id="k-tail" style="color:var(--accent-cyan)"></span><span class="kpi-subtext" id="k-tail-sub"></span></div></div>
+  </section>
+
+  <!-- 上段：番組を選択する（検索・フィルタ・ソート） -->
+  <section class="chart-card" aria-label="番組フィルタ" style="padding-top:1.1rem;padding-bottom:1.1rem;gap:0.7rem">
+    <div class="chart-header" style="margin:0">
+      <h2 style="font-size:1rem;margin:0">番組を絞り込む<span style="font-weight:400;font-size:0.72rem;color:var(--text-secondary)"> — 結果は下の番組リストに反映（行クリックでカルテへ）</span></h2>
+    </div>
+    <div class="filter-bar">
+      <input id="list-search" class="custom-input" type="text" placeholder="番組名・IDで検索" style="width:190px">
+      <div class="control-group"><label>ジャンル</label><div id="f-genre" class="chip-group"></div></div>
+      <div class="control-group"><label>収支</label><div id="f-pnl" class="chip-group"></div></div>
+      <div class="control-group"><label>テール</label><div id="f-tail" class="chip-group"></div></div>
+    </div>
+  </section>
+
+  <!-- 中段：資産ポートフォリオ・マップ（散布図を最大面積で） -->
+  <section class="chart-card" aria-label="ポートフォリオ">
+    <div class="chart-header" style="display:flex;justify-content:space-between;gap:0.8rem;flex-wrap:wrap;align-items:flex-start">
+      <div>
+        <h2>資産ポートフォリオ・マップ<span style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)">（横＝テール収入 × 縦＝放送時点収支・87点）</span></h2>
+        <p class="chart-desc">縦＝放送時点で黒字か（上）／赤字か（下）、横＝放送後もテールで稼ぐ資産性（右ほど大）。右上＝理想的IP資産、右下＝テールで回収、左上＝一発完結の稼ぎ頭、左下＝要注意。バブル＝支出実績。点クリックでカルテへ。上のフィルタで該当を強調（非該当は淡色で残る）。「選択にフィット」で該当番組の範囲に軸を合わせ相対比較（「全域」で全87本スケールに戻す）。</p>
+      </div>
+      <div class="toggle-btn-group">
+        <button id="zoom-all" class="toggle-btn">全域</button>
+        <button id="zoom-mid" class="toggle-btn active">選択にフィット</button>
+      </div>
+    </div>
+    <div id="genre-legend" class="legend-inline"></div>
+    <div class="chart-wrapper" style="height:min(66vh,660px)"><canvas id="portfolio-chart"></canvas></div>
+    <div class="defs"><b>【データ定義】</b> X＝テール収入（tail_revenue）、Y＝放送時点収支（primary_net）。単位：百万円。横ゼロ＝テール無し（左端の縦列）、縦ゼロ線＝損益分岐。</div>
+  </section>
+
+  <!-- 下段：番組リスト（ソート結果・横幅いっぱい） -->
+  <section class="chart-card" aria-label="番組リスト">
+    <div class="chart-header">
+      <h2>番組リスト<span id="list-count" style="font-weight:400;font-size:0.78rem;color:var(--text-secondary)"></span></h2>
+      <p class="chart-desc">上のフィルタで絞り込み。<b>列見出しクリックでソート</b>（再クリックで昇順／降順切替）。行クリックでカルテへ。金額＝百万円、通期収支＝億円。</p>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="prog-table">
+        <thead><tr id="prog-thead"></tr></thead>
+        <tbody id="prog-list"></tbody>
+      </table>
+    </div>
+    <button id="list-more" class="pill-btn">さらに表示</button>
+  </section>
+</main>
+
+<!-- ============ TAB 2: KARTE ============ -->
+<main class="dashboard-grid" id="main-karte" style="display:none">
+  <section class="chart-card" aria-label="番組を選ぶ" style="padding-top:1.1rem;padding-bottom:1.1rem;gap:0.7rem">
+    <div class="chart-header" style="margin:0"><h2 style="font-size:1rem;margin:0">① 番組を選ぶ<span style="font-weight:400;font-size:0.72rem;color:var(--text-secondary)"> — 曜日・時間帯・ジャンルで絞り、並べ替えてプルダウンで確定（下にカルテ表示）</span></h2></div>
+    <div class="filter-bar">
+      <div class="control-group"><label>曜日</label><div id="s-day" class="chip-group"></div></div>
+      <div class="control-group"><label>時間帯</label><div id="s-band" class="chip-group"></div></div>
+      <div class="control-group"><label>ジャンル</label><div id="s-genre" class="chip-group"></div></div>
+      <div class="control-group"><label>並び順</label>
+        <select id="s-sort" class="custom-select" style="padding:0.35rem 0.7rem;font-size:0.78rem">
+          <option value="sched">放送順（曜日・時間帯）</option>
+          <option value="net">通期収支（降順）</option>
+          <option value="tail">テール収入（降順）</option>
+          <option value="spend">支出実績（降順）</option>
+        </select>
+      </div>
+    </div>
+    <div class="control-group" style="max-width:680px">
+      <label for="prog-selector">番組を確定 <span id="s-count" style="color:var(--text-secondary);font-weight:400"></span></label>
+      <select id="prog-selector" class="custom-select"></select>
+    </div>
+  </section>
+
+  <section id="karte-detail" class="chart-card" aria-label="カルテヘッダ" style="padding-top:1.1rem;padding-bottom:1.1rem;gap:0.55rem">
+    <div class="karte-head">
+      <div class="ttl" id="kh-name"></div>
+      <span id="kh-genre"></span>
+      <div class="idm" id="kh-id" style="margin-left:auto"></div>
+    </div>
+    <div id="kh-scenario" class="note-strip" style="display:none"></div>
+    <div id="kh-eval" class="note-strip plain"></div>
+  </section>
+
+  <section class="kpi-container" aria-label="番組KPI">
+    <div class="kpi-card"><div class="kpi-icon">🎯</div><div class="kpi-data">
+      <span class="kpi-label">通期収支</span><span class="kpi-value" id="d-net"></span><span class="kpi-subtext">放送時点＋テール</span></div></div>
+    <div class="kpi-card"><div class="kpi-icon">📡</div><div class="kpi-data">
+      <span class="kpi-label">放送時点収支</span><span class="kpi-value" id="d-shot"></span><span class="kpi-subtext">一次流通（放送時）まで</span></div></div>
+    <div class="kpi-card"><div class="kpi-icon">🌊</div><div class="kpi-data">
+      <span class="kpi-label">テール収入</span><span class="kpi-value" id="d-tail"></span><span class="kpi-subtext" id="d-tail-sub"></span></div></div>
+    <div class="kpi-card"><div class="kpi-icon">💹</div><div class="kpi-data">
+      <span class="kpi-label">回収率（収入÷支出）</span><span class="kpi-value" id="d-rec"></span><span class="kpi-subtext" id="d-rec-sub"></span></div></div>
+    <div class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-data">
+      <span class="kpi-label">損益分岐（四半期）</span><span class="kpi-value" id="d-be" style="font-size:1.15rem"></span><span class="kpi-subtext">累積実績のゼロ交差</span></div></div>
+  </section>
+
+  <section class="chart-section" aria-label="CFと二段構造">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2>四半期キャッシュフロー<span style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)">（棒＝四半期純額・線＝累積）</span></h2>
+        <p class="chart-desc">v3.0は四半期粒度（DEC-24）＝1番組最大4点。滑らかな月次カーブではなく、累積のゼロ交差（損益分岐）と「放送時点→テール」の二段を読む。破線＝予算累積、実線＝実績累積。</p>
+      </div>
+      <div class="chart-wrapper short"><canvas id="cf-chart"></canvas></div>
+      <div class="defs"><b>【データ定義】</b> money_events.csv を番組×四半期で集計。四半期純額＝Σ(収入actual)−Σ(支出actual)、累積はその積み上げ（予算側も同一ロジック）。会計実績＋管理会計配賦のみ（経済価値推計は除外）。単位：百万円。</div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2>放送時点 → テールの二段構造</h2>
+        <p class="chart-desc">通期収支の内訳。テール=0なら放送完結型。</p>
+      </div>
+      <div class="chart-wrapper mini"><canvas id="stage-chart"></canvas></div>
+      <div id="d-struct-note" class="note-strip blue"></div>
+    </div>
+  </section>
+
+  <section class="chart-section half" aria-label="費目内訳">
+    <div class="chart-card">
+      <div class="chart-header"><h2>支出の内訳（実績・上位費目）</h2><p class="chart-desc">money_events.csv の費目別集計。単位：百万円。</p></div>
+      <div id="items-out"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h2>収入の内訳（実績・上位費目）</h2><p class="chart-desc">タイム・スポット・配信・テールがどの比率か。単位：百万円。</p></div>
+      <div id="items-in"></div>
+    </div>
+  </section>
+
+  <section class="chart-card" aria-label="構造指標">
+    <div class="chart-header"><h2>構造指標（機械導出）</h2>
+      <p class="chart-desc">手書き解説に依存せず、正データから機械的に導いた番組の性格。全87本で同一ロジック。</p></div>
+    <div class="kpi-container" id="d-struct-cards"></div>
+    <div class="defs"><b>【注記】</b> 金額明細は全行モデル推計（確度D/E）。実番組名は表示しない（DEC-28）——表示は枠＋クール表記（display_name）とprogram_idのみ。</div>
+  </section>
+</main>
+
+<!-- ============ TAB 3: VARIANCE ============ -->
+<main class="dashboard-grid" id="main-variance" style="display:none">
+  <section class="chart-card">
+    <div class="chart-header">
+      <h2>予実の健全性<span style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)">（架空番組の歪みシナリオ再現・fictional_flag=1）</span></h2>
+      <p class="chart-desc">実編成84本は予実一致が仕様（実在番組にネガティブ差異を紐づけない）のため本タブでは扱わない。差異・打ち切り・予実超過・慣行取引などの「物語」は架空3本が専任で再現する。実在の番組・事務所の事実ではない。</p>
+    </div>
+  </section>
+
+  <section class="chart-card" aria-label="架空番組を選ぶ" style="padding-top:1.1rem;padding-bottom:1.1rem;gap:0.55rem">
+    <div class="chart-header" style="margin:0"><h2 style="font-size:1rem;margin:0">① 番組を選ぶ<span style="font-weight:400;font-size:0.72rem;color:var(--text-secondary)"> — 架空3本から選択（「全架空3本」でまとめて表示）</span></h2></div>
+    <div class="control-group" style="max-width:600px">
+      <label for="vfic-selector">架空番組を確定 <span id="v-fic-count-lbl" style="color:var(--text-secondary);font-weight:400"></span></label>
+      <select id="vfic-selector" class="custom-select"></select>
+    </div>
+  </section>
+
+  <section class="chart-card" aria-label="項目別予実差">
+    <div class="chart-header">
+      <h2>項目別 予実差サマリー<span style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)"> — 選択番組を項目で集約</span></h2>
+      <p class="chart-desc">選択した架空番組の差異を項目ごとに合算。どの費目・収入項目が予実差を生んでいるかを一望できる。単位：千円。差異率＝差異÷|予算|。</p>
+    </div>
+    <div style="overflow-x:auto"><table id="v-agg-table" class="sort-table">
+      <thead><tr id="v-agg-thead"></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <section class="chart-card" aria-label="差異明細">
+    <div class="chart-header">
+      <h2>差異明細<span class="tagx tag-fic" style="margin-left:0.5rem">シナリオ再現</span></h2>
+      <p class="chart-desc">予実超過・打ち切り・慣行取引など、実在番組に紐づけてはならない歪みを架空番組で意図的に再現。本タブは架空番組のみ＝全て「シナリオ再現」。単位：千円。</p>
+    </div>
+    <div style="overflow-x:auto"><table id="v-fic-table" class="sort-table">
+      <thead><tr id="v-fic-thead"></tr></thead>
+      <tbody></tbody></table></div>
+    <div class="defs"><b>【データ定義】</b> money_events.csv のうち予算≠実績の架空35行。実編成側（客観差異2行・実績欠損13行）は仕様上「予実一致」の範囲であり本タブでは非表示。</div>
+  </section>
+
+  <section class="chart-card" aria-label="慣行取引">
+    <div class="chart-header">
+      <h2>慣行取引の可視化<span class="tagx tag-fic" style="margin-left:0.5rem">架空番組のみ・シナリオ再現</span></h2>
+      <p class="chart-desc">「貸し借り・仁義」で処理されてきた取引の勘定化。慣行行（C26〜C29）は架空番組にのみ存在し、通常行とは統合しない（独立表示）。</p>
+    </div>
+    <div class="note-strip">本セクションは架空番組でのシナリオ再現です（公正取引委員会 2024年12月報告書が示す業界一般の慣行に基づくモデル。特定の実在番組・事務所の事実ではありません）。実編成84本に慣行行は存在しません（仕様§2-2）。</div>
+    <div style="overflow-x:auto"><table id="kanko-table">
+      <thead><tr><th>番組</th><th>慣行費目</th><th>Q</th><th>性格</th><th class="num">予算(千円)</th><th class="num">実績(千円)</th><th>確度</th><th>注記（市場換算を含む）</th></tr></thead>
+      <tbody></tbody></table></div>
+    <div class="defs"><b>【注記】</b> 計上ゼロの慣行（キープ拘束・バーター出演）は「経済価値推計」行として市場換算のみ注記され、会計集計には混入しない。</div>
+  </section>
+</main>
+
+
+
+<!-- Footer (共通ナレッジスタイル Unified Footer) -->
+<footer class="app-footer">
+  <div class="footer-container">
+    <p class="footer-title">番組軸PLM 資産ポートフォリオ・ダッシュボード（FY2025・87番組）</p>
+    <p class="footer-sub">企画・分析・データ設計：Naohisa Hashimoto（Media Architect）</p>
+    <p id="footer-line">© 2026 Naohisa Hashimoto’S Update date:2026/10/02</p>
+  </div>
+</footer>
+
+<script>
+const DATASETS = {"FY2025": {"meta": {"version": "3.0", "fiscal_year": "FY2025", "unit": "K_JPY", "created_at": "2026-07-22T15:53:22+09:00", "p5_status": "PASS + WARNING"}, "kpis": {"program_count": 87, "real_program_count": 84, "fictional_program_count": 3, "p5_fail_count": 0, "p5_warning_count": 2, "expense_actual_k_jpy": 45460127.936, "revenue_actual_k_jpy": 60022391.651, "net_actual_k_jpy": 14562263.715000002, "tail_revenue_k_jpy": 5941011.111}, "tiers": {"A": 24, "B": 37, "C": 13, "D": 5, "S": 8}, "rowRank": {"A": 0, "B": 0, "C": 0, "D": 380, "E": 1751}, "progConf": {"A": 2, "B": 2, "C": 0, "D": 80, "E": 3}, "p5": [{"check_id": "P5-PRODUCTION-UPPER", "category": "TOTAL_RECONCILIATION", "status": "PASS", "actual_and_delta": "43,319.727936 <= 79,493 M_JPY; headroom=36,173.272064 M_JPY", "where_to_fix": "枠基準額表または対象範囲", "notes": "台帳84本の制作費積上が地上波番組制作費全体を超えない。架空番組は分母から除外", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-PRODUCTION-COVERAGE", "category": "TOTAL_RECONCILIATION", "status": "WARNING", "actual_and_delta": "54.4950% vs 55.5000%; delta=-1.0050pp", "where_to_fix": "枠基準額表または高単価番組の評価", "notes": "制作費カバー率と時間カバー率55.5%を比較する（上回ればPASS方向・下回ればWARNING）。未達はDEC-27によりWARNING", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-PRODUCTION-QUARTER-DIRECTION", "category": "TOTAL_RECONCILIATION", "status": "WARNING", "actual_and_delta": "matching_steps=1/3; model=Q1:12,110.252424/Q2:10,036.745664/Q3:11,930.764924/Q4:9,241.964924; disclosed=Q1:18,687/Q2:19,917/Q3:20,128/Q4:20,759", "where_to_fix": "クール話数配分または採録範囲", "notes": "台帳制作費の四半期推移が開示実績と同方向に動く。方向不一致はDEC-27によりWARNING", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-AD-UPPER", "category": "TOTAL_RECONCILIATION", "status": "PASS", "actual_and_delta": "51,809.951969 <= 186,700 M_JPY; headroom=134,890.048031 M_JPY", "where_to_fix": "広告基準額または配賦係数", "notes": "台帳枠のタイム＋スポット積上が地上波広告収入全体を超えない", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-AD-COVERAGE", "category": "TOTAL_RECONCILIATION", "status": "PASS", "actual_and_delta": "actual=51,809.951969 M_JPY; coverage=27.7504%", "where_to_fix": "広告基準額または採録範囲", "notes": "台帳広告収入の開示総額に対するカバー率を記録する。記録項目", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-STREAMING-UPPER", "category": "TOTAL_RECONCILIATION", "status": "PASS", "actual_and_delta": "4,377.511111 <= 36,000 M_JPY; headroom=31,622.488889 M_JPY", "where_to_fix": "配信係数または観測マスタ", "notes": "台帳配信収入積上がインターネット事業収入全体を超えない。L002/L003 actualを集計", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-STREAMING-COVERAGE", "category": "TOTAL_RECONCILIATION", "status": "PASS", "actual_and_delta": "actual=4,377.511111 M_JPY; coverage=37.4146%; missing_actual=190", "where_to_fix": "配信係数または観測マスタ", "notes": "台帳配信収入のデジタル広告関連収入に対するカバー率を記録する。欠損は推測補完なし", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-COVERAGE-01", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=12; ids=TVA-0FD183AB209F,TVA-160CDBAD19F2,TVA-348F6E6530A8,TVA-39715D99379B,TVA-53990F1B4A2E,TVA-5C653FF26E07,TVA-6A7865A214EB,TVA-A7526E89DE23,TVA-ADBD18EC1C2B,TVA-B04C16422E60 (+2)", "where_to_fix": "観測事実または架空補完", "notes": "ショット赤字からテール黒字の逆転", "affected_count": 12, "affected_ids": "TVA-0FD183AB209F|TVA-160CDBAD19F2|TVA-348F6E6530A8|TVA-39715D99379B|TVA-53990F1B4A2E|TVA-5C653FF26E07|TVA-6A7865A214EB|TVA-A7526E89DE23|TVA-ADBD18EC1C2B|TVA-B04C16422E60|TVA-D5EE90A42D04|TVA-E880CE0ABB46"}, {"check_id": "P5-COVERAGE-02", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=4; ids=TVA-53366287D38B,TVA-7220C2D9126C,TVA-BB3F7081EC84,TVA-D1511798B61A", "where_to_fix": "観測事実または契約条件", "notes": "独占SVOD販売の機会費用", "affected_count": 4, "affected_ids": "TVA-53366287D38B|TVA-7220C2D9126C|TVA-BB3F7081EC84|TVA-D1511798B61A"}, {"check_id": "P5-COVERAGE-03", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=1; ids=TVA-B19025B93032", "where_to_fix": "観測事実", "notes": "権利未クリアによる配信不可", "affected_count": 1, "affected_ids": "TVA-B19025B93032"}, {"check_id": "P5-COVERAGE-04", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=13; ids=TVA-0FD183AB209F,TVA-19C5AB458DD3,TVA-274D2C1FAF44,TVA-36F3501C929C,TVA-3E639573EB66,TVA-4D56B8652F78,TVA-53366287D38B,TVA-53990F1B4A2E,TVA-7220C2D9126C,TVA-A7526E89DE23 (+3)", "where_to_fix": "観測事実または委員会係数", "notes": "委員会出資の回収遅延・回収順位", "affected_count": 13, "affected_ids": "TVA-0FD183AB209F|TVA-19C5AB458DD3|TVA-274D2C1FAF44|TVA-36F3501C929C|TVA-3E639573EB66|TVA-4D56B8652F78|TVA-53366287D38B|TVA-53990F1B4A2E|TVA-7220C2D9126C|TVA-A7526E89DE23|TVA-BB3F7081EC84|TVA-D1511798B61A|TVA-D8B56F3B7A50"}, {"check_id": "P5-COVERAGE-05", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=1; ids=TVA-B525E044E602", "where_to_fix": "観測事実", "notes": "イベント型の権利料先行・視聴率未達赤字", "affected_count": 1, "affected_ids": "TVA-B525E044E602"}, {"check_id": "P5-COVERAGE-06", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=1; ids=FIC-02", "where_to_fix": "観測事実", "notes": "打ち切りの損切り判断", "affected_count": 1, "affected_ids": "FIC-02"}, {"check_id": "P5-COVERAGE-07", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=10; ids=TVA-19C5AB458DD3,TVA-274D2C1FAF44,TVA-3E639573EB66,TVA-53366287D38B,TVA-53990F1B4A2E,TVA-7220C2D9126C,TVA-A7526E89DE23,TVA-BB3F7081EC84,TVA-D1511798B61A,TVA-E880CE0ABB46", "where_to_fix": "観測事実", "notes": "深夜低視聴率×配信回収", "affected_count": 10, "affected_ids": "TVA-19C5AB458DD3|TVA-274D2C1FAF44|TVA-3E639573EB66|TVA-53366287D38B|TVA-53990F1B4A2E|TVA-7220C2D9126C|TVA-A7526E89DE23|TVA-BB3F7081EC84|TVA-D1511798B61A|TVA-E880CE0ABB46"}, {"check_id": "P5-COVERAGE-08", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=1; ids=FIC-03", "where_to_fix": "観測事実または架空補完", "notes": "フォーマット輸出", "affected_count": 1, "affected_ids": "FIC-03"}, {"check_id": "P5-COVERAGE-09", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=1; ids=FIC-01", "where_to_fix": "架空番組補完", "notes": "慣行取引によるROI歪み", "affected_count": 1, "affected_ids": "FIC-01"}, {"check_id": "P5-COVERAGE-10", "category": "COVERAGE", "status": "PASS", "actual_and_delta": "evidence_count=1; ids=FIC-01", "where_to_fix": "架空番組補完", "notes": "予実管理不在による超過検知遅れ", "affected_count": 1, "affected_ids": "FIC-01"}, {"check_id": "P5-RULE-KANKO", "category": "RULE", "status": "PASS", "actual_and_delta": "violations=0", "where_to_fix": "番組マスタまたは差異辞書", "notes": "慣行行は架空番組だけ", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-RULE-TAIL", "category": "RULE", "status": "PASS", "actual_and_delta": "violations=0", "where_to_fix": "観測マスタまたは収益行生成規則", "notes": "展開事実なきテール行なし", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-RULE-TRACE", "category": "RULE", "status": "PASS", "actual_and_delta": "violations=0", "where_to_fix": "Money Event生成処理", "notes": "全明細に5トレース列あり", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-RULE-RANK", "category": "RULE", "status": "PASS", "actual_and_delta": "violations=0", "where_to_fix": "観測マスタまたはMoney Event生成処理", "notes": "全明細に確度ランクと出典あり", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-RULE-REALNAME", "category": "RULE", "status": "PASS", "actual_and_delta": "violations=0", "where_to_fix": "表示名生成処理", "notes": "実番組名はアンカー出典列だけ", "affected_count": 0, "affected_ids": null}, {"check_id": "P5-RULE-L005", "category": "RULE", "status": "PASS", "actual_and_delta": "checked=191; violations=0", "where_to_fix": "Money Event生成処理または視聴率観測", "notes": "スポット配賦が実績＝予算×実績個人÷計画個人", "affected_count": 0, "affected_ids": null}], "programs": [{"id": "TVA-94022FA719F5", "name": "毎日 04:55-08:00 FY2025レギュラー", "fic": 0, "genre": "NEWS_INFO", "tier": "A", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 2047000.0, "spendB": 2047000.0, "revA": 2106815.95, "revB": 2106815.95, "net": 59815.950000000186, "shot": 59815.950000000186, "tail": 0.0, "kanko": 0.0, "recovery": 1.0292212750366392, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [3.8, 27.4, 33.5, 59.8], "cumB": [3.8, 27.4, 33.5, 59.8], "qNetA": [3.8, 23.5, 6.1, 26.3], "qNetB": [3.8, 23.5, 6.1, 26.3], "itemsOut": [["制作委託費", 686.1], ["局内人件費配賦", 571.8], ["出演料(主要キャスト・レギュラー)", 457.4], ["映像素材使用料(都度)", 228.7], ["スタジオ・設備費配賦", 91.5], ["番組プロモーション費", 10.5], ["その他", 1.0]], "itemsIn": [["タイム広告収入", 1800.0], ["スポット広告配賦", 306.8]], "breakEven": "常時黒字"}, {"id": "TVA-DD2EBA663388", "name": "土 16:00-16:30 2025年4月クール〜2025年7月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 187500.0, "spendB": 187500.0, "revA": 295747.44, "revB": 295747.44, "net": 108247.44, "shot": 108247.44, "tail": 0.0, "kanko": 0.0, "recovery": 1.57731968, "tailShare": 0.0, "months": ["Q1", "Q2"], "cumA": [49.5, 108.2], "cumB": [49.5, 108.2], "qNetA": [49.5, 58.7], "qNetB": [49.5, 58.7], "itemsOut": [["制作委託費", 62.8], ["局内人件費配賦", 52.4], ["出演料(主要キャスト・レギュラー)", 41.9], ["映像素材使用料(都度)", 20.9], ["スタジオ・設備費配賦", 8.4], ["番組プロモーション費", 1.0], ["その他", 0.1]], "itemsIn": [["タイム広告収入", 225.0], ["スポット広告配賦", 70.7]], "breakEven": "常時黒字"}, {"id": "TVA-58FF69FE01D4", "name": "土 16:00-16:30 2025年10月クール〜2026年1月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 187500.0, "spendB": 187500.0, "revA": 298142.796, "revB": 298142.796, "net": 110642.79599999997, "shot": 110642.79599999997, "tail": 0.0, "kanko": 0.0, "recovery": 1.5900949119999999, "tailShare": 0.0, "months": ["Q3", "Q4"], "cumA": [50.6, 110.6], "cumB": [50.6, 110.6], "qNetA": [50.6, 60.1], "qNetB": [50.6, 60.1], "itemsOut": [["制作委託費", 62.8], ["局内人件費配賦", 52.4], ["出演料(主要キャスト・レギュラー)", 41.9], ["映像素材使用料(都度)", 20.9], ["スタジオ・設備費配賦", 8.4], ["番組プロモーション費", 1.0], ["その他", 0.1]], "itemsIn": [["タイム広告収入", 225.0], ["スポット広告配賦", 73.1]], "breakEven": "常時黒字"}, {"id": "TVA-8AF1FE8870B9", "name": "土 16:30-17:00 FY2025レギュラー", "fic": 0, "genre": "ENTERTAINMENT", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 375000.0, "spendB": 375000.0, "revA": 1038334.68, "revB": 1038334.68, "net": 663334.68, "shot": 218890.23600000003, "tail": 444444.444, "kanko": 0.0, "recovery": 2.7688924800000003, "tailShare": 0.4280358275233569, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [49.5, 108.2, 158.8, 663.3], "cumB": [49.5, 108.2, 158.8, 663.3], "qNetA": [49.5, 58.7, 50.6, 504.5], "qNetB": [49.5, 58.7, 50.6, 504.5], "itemsOut": [["制作委託費", 125.7], ["局内人件費配賦", 104.7], ["出演料(主要キャスト・レギュラー)", 83.8], ["映像素材使用料(都度)", 41.9], ["スタジオ・設備費配賦", 16.8], ["番組プロモーション費", 1.9], ["その他", 0.2]], "itemsIn": [["タイム広告収入", 450.0], ["全世界SVOD一括ライセンス", 444.4], ["スポット広告配賦", 143.9]], "breakEven": "常時黒字"}, {"id": "TVA-3B4F49AD6B99", "name": "土 17:00-17:30 FY2025レギュラー", "fic": 0, "genre": "ENTERTAINMENT", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 375000.0, "spendB": 375000.0, "revA": 1038334.68, "revB": 1038334.68, "net": 663334.68, "shot": 218890.23600000003, "tail": 444444.444, "kanko": 0.0, "recovery": 2.7688924800000003, "tailShare": 0.4280358275233569, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [49.5, 108.2, 158.8, 663.3], "cumB": [49.5, 108.2, 158.8, 663.3], "qNetA": [49.5, 58.7, 50.6, 504.5], "qNetB": [49.5, 58.7, 50.6, 504.5], "itemsOut": [["制作委託費", 125.7], ["局内人件費配賦", 104.7], ["出演料(主要キャスト・レギュラー)", 83.8], ["映像素材使用料(都度)", 41.9], ["スタジオ・設備費配賦", 16.8], ["番組プロモーション費", 1.9], ["その他", 0.2]], "itemsIn": [["タイム広告収入", 450.0], ["全世界SVOD一括ライセンス", 444.4], ["スポット広告配賦", 143.9]], "breakEven": "常時黒字"}, {"id": "TVA-EA1B07BDFFCD", "name": "土・日 17:30-18:00 FY2025レギュラー", "fic": 0, "genre": "NEWS_INFO", "tier": "C", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 308775.512, "spendB": 308775.512, "revA": 2026777.007, "revB": 2026777.007, "net": 1718001.495, "shot": 1718001.495, "tail": 0.0, "kanko": 0.0, "recovery": 6.563917565457717, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [421.3, 857.1, 1280.1, 1718.0], "cumB": [421.3, 857.1, 1280.1, 1718.0], "qNetA": [421.3, 435.8, 423.0, 437.9], "qNetB": [421.3, 435.8, 423.0, 437.9], "itemsOut": [["制作委託費", 103.5], ["局内人件費配賦", 86.3], ["出演料(主要キャスト・レギュラー)", 69.0], ["映像素材使用料(都度)", 34.5], ["スタジオ・設備費配賦", 13.8], ["番組プロモーション費", 1.6], ["その他", 0.1]], "itemsIn": [["タイム広告収入", 1800.0], ["スポット広告配賦", 226.8]], "breakEven": "常時黒字"}, {"id": "TVA-885F2A96FE82", "name": "土 18:00-18:30 FY2025レギュラー", "fic": 0, "genre": "EDUCATION", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 375000.0, "spendB": 375000.0, "revA": 593890.236, "revB": 593890.236, "net": 218890.23600000003, "shot": 218890.23600000003, "tail": 0.0, "kanko": 0.0, "recovery": 1.583707296, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [49.5, 108.2, 158.8, 218.9], "cumB": [49.5, 108.2, 158.8, 218.9], "qNetA": [49.5, 58.7, 50.6, 60.1], "qNetB": [49.5, 58.7, 50.6, 60.1], "itemsOut": [["制作委託費", 125.7], ["局内人件費配賦", 104.7], ["出演料(主要キャスト・レギュラー)", 83.8], ["映像素材使用料(都度)", 41.9], ["スタジオ・設備費配賦", 16.8], ["番組プロモーション費", 1.9], ["その他", 0.2]], "itemsIn": [["タイム広告収入", 450.0], ["スポット広告配賦", 143.9]], "breakEven": "常時黒字"}, {"id": "TVA-D5C2917D8A1A", "name": "土 18:30-18:56 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 281250.0, "spendB": 281250.0, "revA": 440075.411, "revB": 440075.411, "net": 158825.41100000002, "shot": 158825.41100000002, "tail": 0.0, "kanko": 0.0, "recovery": 1.5647125724444446, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3"], "cumA": [49.5, 108.2, 158.8], "cumB": [49.5, 108.2, 158.8], "qNetA": [49.5, 58.7, 50.6], "qNetB": [49.5, 58.7, 50.6], "itemsOut": [["制作委託費", 94.3], ["局内人件費配賦", 78.6], ["出演料(主要キャスト・レギュラー)", 62.8], ["映像素材使用料(都度)", 31.4], ["スタジオ・設備費配賦", 12.6], ["番組プロモーション費", 1.4], ["その他", 0.1]], "itemsIn": [["タイム広告収入", 337.5], ["スポット広告配賦", 102.6]], "breakEven": "常時黒字"}, {"id": "TVA-408B7D255C41", "name": "土 18:56-20:00 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "EDUCATION", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 187500.0, "spendB": 187500.0, "revA": 287579.834, "revB": 287579.834, "net": 100079.83399999997, "shot": 100079.83399999997, "tail": 0.0, "kanko": 0.0, "recovery": 1.5337591146666665, "tailShare": 0.0, "months": ["Q1", "Q3"], "cumA": [49.5, 100.1], "cumB": [49.5, 100.1], "qNetA": [49.5, 50.6], "qNetB": [49.5, 50.6], "itemsOut": [["制作委託費", 62.8], ["局内人件費配賦", 52.4], ["出演料(主要キャスト・レギュラー)", 41.9], ["映像素材使用料(都度)", 20.9], ["スタジオ・設備費配賦", 8.4], ["番組プロモーション費", 1.0], ["その他", 0.1]], "itemsIn": [["タイム広告収入", 225.0], ["スポット広告配賦", 62.6]], "breakEven": "常時黒字"}, {"id": "TVA-F553BB4431CE", "name": "土 20:00-20:54 2025年4月クール〜2026年1月クール作品", "fic": 0, "genre": "NEWS_INFO", "tier": "C", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 416326.53, "spendB": 416326.53, "revA": 1794368.199, "revB": 1794368.199, "net": 1378041.669, "shot": 1378041.669, "tail": 0.0, "kanko": 0.0, "recovery": 4.310002052955885, "tailShare": 0.0, "months": ["Q1", "Q3", "Q4"], "cumA": [448.4, 899.8, 1378.0], "cumB": [448.4, 899.8, 1378.0], "qNetA": [448.4, 451.4, 478.3], "qNetB": [448.4, 451.4, 478.3], "itemsOut": [["局内人件費配賦", 207.0], ["支局・取材網維持費配賦", 77.6], ["中継・緊急対応費", 64.7], ["ニュース素材契約費配賦", 38.8], ["スタジオ・設備費配賦", 25.9], ["番組プロモーション費", 2.1], ["その他", 0.2]], "itemsIn": [["タイム広告収入", 1500.0], ["スポット広告配賦", 294.4]], "breakEven": "常時黒字"}, {"id": "TVA-A656F6CD1D32", "name": "土 20:54-21:54 FY2025レギュラー", "fic": 0, "genre": "NEWS_INFO", "tier": "A", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 751020.408, "spendB": 751020.408, "revA": 2551579.237, "revB": 2551579.237, "net": 1800558.8290000001, "shot": 1800558.8290000001, "tail": 0.0, "kanko": 0.0, "recovery": 3.397483223917931, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [430.1, 895.7, 1329.9, 1800.6], "cumB": [430.1, 895.7, 1329.9, 1800.6], "qNetA": [430.1, 465.6, 434.3, 470.6], "qNetB": [430.1, 465.6, 434.3, 470.6], "itemsOut": [["局内人件費配賦", 373.4], ["支局・取材網維持費配賦", 140.0], ["中継・緊急対応費", 116.7], ["ニュース素材契約費配賦", 70.0], ["スタジオ・設備費配賦", 46.7], ["番組プロモーション費", 3.8], ["その他", 0.4]], "itemsIn": [["タイム広告収入", 2000.0], ["スポット広告配賦", 551.6]], "breakEven": "常時黒字"}, {"id": "TVA-15F605CF852E", "name": "土 22:00-22:30 2025年4月クール〜2026年1月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 657656.25, "spendB": 657656.25, "revA": 394055.82, "revB": 394055.82, "net": -263600.43, "shot": -263600.43, "tail": 0.0, "kanko": 0.0, "recovery": 0.5991820498930862, "tailShare": 0.0, "months": ["Q1", "Q3", "Q4"], "cumA": [-101.7, -199.6, -263.6], "cumB": [-101.7, -199.6, -263.6], "qNetA": [-101.7, -97.9, -64.0], "qNetB": [-101.7, -97.9, -64.0], "itemsOut": [["局内人件費配賦", 359.7], ["制作委託費", 163.5], ["出演料(主要キャスト・レギュラー)", 98.1], ["スタジオ・設備費配賦", 32.7], ["番組プロモーション費", 3.4], ["音楽包括利用料配賦", 0.3]], "itemsIn": [["スポット広告配賦", 371.6], ["タイム広告収入", 22.5]], "breakEven": null}, {"id": "TVA-0F795021EFE5", "name": "土 23:00-23:30 2026年1月クール作品", "fic": 0, "genre": "DRAMA", "tier": "D", "mgmt": "A.クール管理型", "conf": "D", "spendA": 100800.0, "spendB": 100800.0, "revA": 91280.252, "revB": 91280.252, "net": -9519.748000000007, "shot": -9519.748000000007, "tail": 0.0, "kanko": 0.0, "recovery": 0.9055580555555555, "tailShare": 0.0, "months": ["Q4"], "cumA": [-9.5], "cumB": [-9.5], "qNetA": [-9.5], "qNetB": [-9.5], "itemsOut": [["制作委託費", 41.2], ["出演料(主要キャスト・レギュラー)", 14.9], ["出演料(主演)", 11.6], ["美術・セット費", 7.7], ["番組プロモーション費", 7.7], ["ロケ・技術費", 6.4], ["その他", 11.3]], "itemsIn": [["タイム広告収入", 72.0], ["スポット広告配賦", 19.3]], "breakEven": null}, {"id": "TVA-248C73FE7812", "name": "土 23:00-23:30 2025年10月クール作品", "fic": 0, "genre": "DRAMA", "tier": "C", "mgmt": "A.クール管理型", "conf": "D", "spendA": 122400.0, "spendB": 122400.0, "revA": 90035.85, "revB": 90035.85, "net": -32364.149999999994, "shot": -32364.149999999994, "tail": 0.0, "kanko": 0.0, "recovery": 0.7355870098039217, "tailShare": 0.0, "months": ["Q3"], "cumA": [-32.4], "cumB": [-32.4], "qNetA": [-32.4], "qNetB": [-32.4], "itemsOut": [["制作委託費", 50.0], ["出演料(主要キャスト・レギュラー)", 18.1], ["出演料(主演)", 14.1], ["美術・セット費", 9.4], ["番組プロモーション費", 9.4], ["ロケ・技術費", 7.8], ["その他", 13.7]], "itemsIn": [["タイム広告収入", 72.0], ["スポット広告配賦", 18.0]], "breakEven": null}, {"id": "TVA-47792662FE43", "name": "土 23:00-23:30 2025年4月クール作品", "fic": 0, "genre": "DRAMA", "tier": "C", "mgmt": "A.クール管理型", "conf": "D", "spendA": 122400.0, "spendB": 122400.0, "revA": 89426.055, "revB": 89426.055, "net": -32973.94500000001, "shot": -32973.94500000001, "tail": 0.0, "kanko": 0.0, "recovery": 0.7306050245098039, "tailShare": 0.0, "months": ["Q1"], "cumA": [-33.0], "cumB": [-33.0], "qNetA": [-33.0], "qNetB": [-33.0], "itemsOut": [["制作委託費", 50.0], ["出演料(主要キャスト・レギュラー)", 18.1], ["出演料(主演)", 14.1], ["美術・セット費", 9.4], ["番組プロモーション費", 9.4], ["ロケ・技術費", 7.8], ["その他", 13.7]], "itemsIn": [["タイム広告収入", 72.0], ["スポット広告配賦", 17.4]], "breakEven": null}, {"id": "TVA-306EEEA2A19C", "name": "土 23:00-23:30 2025年7月クール作品", "fic": 0, "genre": "DRAMA", "tier": "D", "mgmt": "A.クール管理型", "conf": "D", "spendA": 100800.0, "spendB": 100800.0, "revA": 90664.603, "revB": 90664.603, "net": -10135.396999999997, "shot": -10135.396999999997, "tail": 0.0, "kanko": 0.0, "recovery": 0.8994504265873016, "tailShare": 0.0, "months": ["Q2"], "cumA": [-10.1], "cumB": [-10.1], "qNetA": [-10.1], "qNetB": [-10.1], "itemsOut": [["制作委託費", 41.2], ["出演料(主要キャスト・レギュラー)", 14.9], ["出演料(主演)", 11.6], ["美術・セット費", 7.7], ["番組プロモーション費", 7.7], ["ロケ・技術費", 6.4], ["その他", 11.3]], "itemsIn": [["タイム広告収入", 72.0], ["スポット広告配賦", 18.7]], "breakEven": null}, {"id": "TVA-274D2C1FAF44", "name": "土 23:30-24:00 2026年1月クール作品", "fic": 0, "genre": "ANIME", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 192000.0, "spendB": 192000.0, "revA": 178666.667, "revB": 178666.667, "net": -13333.333000000013, "shot": -192000.0, "tail": 178666.667, "kanko": 0.0, "recovery": 0.9305555572916666, "tailShare": 1.0, "months": ["Q4"], "cumA": [-13.3], "cumB": [-13.3], "qNetA": [-13.3], "qNetB": [-13.3], "itemsOut": [["製作委員会出資金", 166.7], ["番組プロモーション費", 21.0], ["配信追加権利処理費", 4.2], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["全世界SVOD一括ライセンス", 106.7], ["製作委員会分配金", 42.0], ["電波料収入", 30.0]], "breakEven": null}, {"id": "TVA-A7526E89DE23", "name": "土 23:30-24:00 2025年7月クール作品", "fic": 0, "genre": "ANIME", "tier": "S", "mgmt": "A.クール管理型", "conf": "D", "spendA": 249600.0, "spendB": 249600.0, "revA": 401666.667, "revB": 401666.667, "net": 152066.66700000002, "shot": -249600.0, "tail": 401666.667, "kanko": 0.0, "recovery": 1.6092414543269231, "tailShare": 1.0, "months": ["Q2"], "cumA": [152.1], "cumB": [152.1], "qNetA": [152.1], "qNetB": [152.1], "itemsOut": [["製作委員会出資金", 216.7], ["番組プロモーション費", 27.4], ["配信追加権利処理費", 5.5], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["全世界SVOD一括ライセンス", 266.7], ["製作委員会分配金", 105.0], ["電波料収入", 30.0]], "breakEven": "常時黒字"}, {"id": "TVA-7220C2D9126C", "name": "土 23:30-24:00 2025年10月クール作品", "fic": 0, "genre": "ANIME", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 192000.0, "spendB": 192000.0, "revA": 79200.0, "revB": 79200.0, "net": -112800.0, "shot": -192000.0, "tail": 79200.0, "kanko": 0.0, "recovery": 0.4125, "tailShare": 1.0, "months": ["Q3"], "cumA": [-112.8], "cumB": [-112.8], "qNetA": [-112.8], "qNetB": [-112.8], "itemsOut": [["製作委員会出資金", 166.7], ["番組プロモーション費", 21.0], ["配信追加権利処理費", 4.2], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["製作委員会分配金", 42.0], ["電波料収入", 30.0], ["配信ライセンス(国内独占)", 7.2]], "breakEven": null}, {"id": "TVA-BB3F7081EC84", "name": "土 23:30-24:00 2025年4月クール作品", "fic": 0, "genre": "ANIME", "tier": "S", "mgmt": "A.クール管理型", "conf": "D", "spendA": 249600.0, "spendB": 249600.0, "revA": 153000.0, "revB": 153000.0, "net": -96600.0, "shot": -249600.0, "tail": 153000.0, "kanko": 0.0, "recovery": 0.6129807692307693, "tailShare": 1.0, "months": ["Q1"], "cumA": [-96.6], "cumB": [-96.6], "qNetA": [-96.6], "qNetB": [-96.6], "itemsOut": [["製作委員会出資金", 216.7], ["番組プロモーション費", 27.4], ["配信追加権利処理費", 5.5], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["製作委員会分配金", 105.0], ["電波料収入", 30.0], ["配信ライセンス(国内独占)", 18.0]], "breakEven": null}, {"id": "TVA-A2BD63BBA520", "name": "土 25:00-25:30 2025年4月クール〜2026年1月クール作品", "fic": 0, "genre": "SPORTS", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 468750.0, "spendB": 468750.0, "revA": 22500.0, "revB": 95837.406, "net": -446250.0, "shot": -446250.0, "tail": 0.0, "kanko": 0.0, "recovery": 0.048, "tailShare": 0.0, "months": ["Q1", "Q3", "Q4"], "cumA": [-148.8, -297.5, -446.2], "cumB": [-127.0, -253.3, -372.9], "qNetA": [-148.8, -148.8, -148.8], "qNetB": [-127.0, -126.3, -119.6], "itemsOut": [["スポーツ中継制作費", 401.8], ["出演料(解説・コメンテーター)", 64.3], ["番組プロモーション費", 2.4], ["音楽包括利用料配賦", 0.2]], "itemsIn": [["タイム広告収入", 22.5]], "breakEven": null}, {"id": "TVA-D1511798B61A", "name": "土 25:30-26:00 2026年1月クール作品", "fic": 0, "genre": "ANIME", "tier": "S", "mgmt": "A.クール管理型", "conf": "D", "spendA": 249600.0, "spendB": 249600.0, "revA": 153000.0, "revB": 153000.0, "net": -96600.0, "shot": -249600.0, "tail": 153000.0, "kanko": 0.0, "recovery": 0.6129807692307693, "tailShare": 1.0, "months": ["Q4"], "cumA": [-96.6], "cumB": [-96.6], "qNetA": [-96.6], "qNetB": [-96.6], "itemsOut": [["製作委員会出資金", 216.7], ["番組プロモーション費", 27.4], ["配信追加権利処理費", 5.5], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["製作委員会分配金", 105.0], ["電波料収入", 30.0], ["配信ライセンス(国内独占)", 18.0]], "breakEven": null}, {"id": "TVA-19C5AB458DD3", "name": "土 25:30-26:00 2025年10月クール作品", "fic": 0, "genre": "ANIME", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 192000.0, "spendB": 192000.0, "revA": 178666.667, "revB": 178666.667, "net": -13333.333000000013, "shot": -192000.0, "tail": 178666.667, "kanko": 0.0, "recovery": 0.9305555572916666, "tailShare": 1.0, "months": ["Q3"], "cumA": [-13.3], "cumB": [-13.3], "qNetA": [-13.3], "qNetB": [-13.3], "itemsOut": [["製作委員会出資金", 166.7], ["番組プロモーション費", 21.0], ["配信追加権利処理費", 4.2], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["全世界SVOD一括ライセンス", 106.7], ["製作委員会分配金", 42.0], ["電波料収入", 30.0]], "breakEven": null}, {"id": "TVA-53990F1B4A2E", "name": "土 25:30-26:00 2025年4月クール作品", "fic": 0, "genre": "ANIME", "tier": "S", "mgmt": "A.クール管理型", "conf": "D", "spendA": 249600.0, "spendB": 249600.0, "revA": 401666.667, "revB": 401666.667, "net": 152066.66700000002, "shot": -249600.0, "tail": 401666.667, "kanko": 0.0, "recovery": 1.6092414543269231, "tailShare": 1.0, "months": ["Q1"], "cumA": [152.1], "cumB": [152.1], "qNetA": [152.1], "qNetB": [152.1], "itemsOut": [["製作委員会出資金", 216.7], ["番組プロモーション費", 27.4], ["配信追加権利処理費", 5.5], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["全世界SVOD一括ライセンス", 266.7], ["製作委員会分配金", 105.0], ["電波料収入", 30.0]], "breakEven": "常時黒字"}, {"id": "TVA-D8B56F3B7A50", "name": "日 09:00-09:30 2025年4月クール〜2025年7月クール作品", "fic": 0, "genre": "HERO", "tier": "B", "mgmt": "A.年間シリーズ型", "conf": "D", "spendA": 500000.0, "spendB": 500000.0, "revA": 990134.621, "revB": 990134.621, "net": 490134.62100000004, "shot": 117912.39899999998, "tail": 372222.222, "kanko": 0.0, "recovery": 1.980269242, "tailShare": 0.37593092303354575, "months": ["Q1", "Q2"], "cumA": [51.3, 490.1], "cumB": [51.3, 490.1], "qNetA": [51.3, 438.9], "qNetB": [51.3, 438.9], "itemsOut": [["制作委託費", 204.2], ["出演料(主要キャスト・レギュラー)", 74.0], ["出演料(主演)", 57.4], ["美術・セット費", 38.3], ["番組プロモーション費", 38.3], ["ロケ・技術費", 31.9], ["その他", 55.9]], "itemsIn": [["タイム広告収入", 500.0], ["全世界SVOD一括ライセンス", 222.2], ["スポット広告配賦", 117.9], ["製作委員会分配金", 87.5], ["電波料収入", 62.5]], "breakEven": "常時黒字"}, {"id": "TVA-4D56B8652F78", "name": "日 09:00-09:30 2025年10月クール〜2026年1月クール作品", "fic": 0, "genre": "HERO", "tier": "B", "mgmt": "A.年間シリーズ型", "conf": "D", "spendA": 500000.0, "spendB": 500000.0, "revA": 994126.882, "revB": 994126.882, "net": 494126.882, "shot": 121904.66000000003, "tail": 372222.222, "kanko": 0.0, "recovery": 1.988253764, "tailShare": 0.37442124213677586, "months": ["Q3", "Q4"], "cumA": [53.0, 494.1], "cumB": [53.0, 494.1], "qNetA": [53.0, 441.1], "qNetB": [53.0, 441.1], "itemsOut": [["制作委託費", 204.2], ["出演料(主要キャスト・レギュラー)", 74.0], ["出演料(主演)", 57.4], ["美術・セット費", 38.3], ["番組プロモーション費", 38.3], ["ロケ・技術費", 31.9], ["その他", 55.9]], "itemsIn": [["タイム広告収入", 500.0], ["全世界SVOD一括ライセンス", 222.2], ["スポット広告配賦", 121.9], ["製作委員会分配金", 87.5], ["電波料収入", 62.5]], "breakEven": "常時黒字"}, {"id": "TVA-36F3501C929C", "name": "日 09:30-10:00 FY2025レギュラー", "fic": 0, "genre": "HERO", "tier": "B", "mgmt": "A.年間シリーズ型", "conf": "D", "spendA": 1000000.0, "spendB": 1000000.0, "revA": 1984261.503, "revB": 1984261.503, "net": 984261.503, "shot": 239817.0589999999, "tail": 744444.444, "kanko": 0.0, "recovery": 1.984261503, "tailShare": 0.37517456387400366, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [51.3, 117.9, 171.0, 984.3], "cumB": [51.3, 117.9, 171.0, 984.3], "qNetA": [51.3, 66.7, 53.0, 813.3], "qNetB": [51.3, 66.7, 53.0, 813.3], "itemsOut": [["制作委託費", 408.4], ["出演料(主要キャスト・レギュラー)", 148.0], ["出演料(主演)", 114.9], ["美術・セット費", 76.6], ["番組プロモーション費", 76.6], ["ロケ・技術費", 63.8], ["その他", 111.8]], "itemsIn": [["タイム広告収入", 1000.0], ["全世界SVOD一括ライセンス", 444.4], ["スポット広告配賦", 239.8], ["製作委員会分配金", 175.0], ["電波料収入", 125.0]], "breakEven": "常時黒字"}, {"id": "TVA-9381A9638734", "name": "日 16:30-17:25 FY2025レギュラー", "fic": 0, "genre": "EDUCATION", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 375000.0, "spendB": 375000.0, "revA": 593890.236, "revB": 593890.236, "net": 218890.23600000003, "shot": 218890.23600000003, "tail": 0.0, "kanko": 0.0, "recovery": 1.583707296, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [49.5, 108.2, 158.8, 218.9], "cumB": [49.5, 108.2, 158.8, 218.9], "qNetA": [49.5, 58.7, 50.6, 60.1], "qNetB": [49.5, 58.7, 50.6, 60.1], "itemsOut": [["制作委託費", 125.7], ["局内人件費配賦", 104.7], ["出演料(主要キャスト・レギュラー)", 83.8], ["映像素材使用料(都度)", 41.9], ["スタジオ・設備費配賦", 16.8], ["番組プロモーション費", 1.9], ["その他", 0.2]], "itemsIn": [["タイム広告収入", 450.0], ["スポット広告配賦", 143.9]], "breakEven": "常時黒字"}, {"id": "TVA-137E2622A6BA", "name": "日 18:00-18:56 FY2025レギュラー", "fic": 0, "genre": "EDUCATION", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 375000.0, "spendB": 375000.0, "revA": 593890.236, "revB": 593890.236, "net": 218890.23600000003, "shot": 218890.23600000003, "tail": 0.0, "kanko": 0.0, "recovery": 1.583707296, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [49.5, 108.2, 158.8, 218.9], "cumB": [49.5, 108.2, 158.8, 218.9], "qNetA": [49.5, 58.7, 50.6, 60.1], "qNetB": [49.5, 58.7, 50.6, 60.1], "itemsOut": [["制作委託費", 125.7], ["局内人件費配賦", 104.7], ["出演料(主要キャスト・レギュラー)", 83.8], ["映像素材使用料(都度)", 41.9], ["スタジオ・設備費配賦", 16.8], ["番組プロモーション費", 1.9], ["その他", 0.2]], "itemsIn": [["タイム広告収入", 450.0], ["スポット広告配賦", 143.9]], "breakEven": "常時黒字"}, {"id": "TVA-C3D1C568616F", "name": "日 18:56-19:50 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 281250.0, "spendB": 281250.0, "revA": 440075.411, "revB": 440075.411, "net": 158825.41100000002, "shot": 158825.41100000002, "tail": 0.0, "kanko": 0.0, "recovery": 1.5647125724444446, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3"], "cumA": [49.5, 108.2, 158.8], "cumB": [49.5, 108.2, 158.8], "qNetA": [49.5, 58.7, 50.6], "qNetB": [49.5, 58.7, 50.6], "itemsOut": [["制作委託費", 94.3], ["局内人件費配賦", 78.6], ["出演料(主要キャスト・レギュラー)", 62.8], ["映像素材使用料(都度)", 31.4], ["スタジオ・設備費配賦", 12.6], ["番組プロモーション費", 1.4], ["その他", 0.1]], "itemsIn": [["タイム広告収入", 337.5], ["スポット広告配賦", 102.6]], "breakEven": "常時黒字"}, {"id": "TVA-21041B1F564D", "name": "日 20:56-22:15 FY2025レギュラー", "fic": 0, "genre": "NEWS_INFO", "tier": "B", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 653061.224, "spendB": 653061.224, "revA": 2479634.119, "revB": 2479634.119, "net": 1826572.895, "shot": 1826572.895, "tail": 0.0, "kanko": 0.0, "recovery": 3.7969397475664546, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [439.2, 909.3, 1352.1, 1826.6], "cumB": [439.2, 909.3, 1352.1, 1826.6], "qNetA": [439.2, 470.1, 442.8, 474.5], "qNetB": [439.2, 470.1, 442.8, 474.5], "itemsOut": [["局内人件費配賦", 324.7], ["支局・取材網維持費配賦", 121.8], ["中継・緊急対応費", 101.5], ["ニュース素材契約費配賦", 60.9], ["スタジオ・設備費配賦", 40.6], ["番組プロモーション費", 3.3], ["その他", 0.3]], "itemsIn": [["タイム広告収入", 2000.0], ["スポット広告配賦", 479.6]], "breakEven": "常時黒字"}, {"id": "TVA-B525E044E602", "name": "D型スポーツイベント枠01 2025年7月クール作品", "fic": 0, "genre": "SPORTS", "tier": "B", "mgmt": "D.イベントプロジェクト型", "conf": "A", "spendA": 687500.0, "spendB": 687500.0, "revA": 450000.0, "revB": 665662.424, "net": -237500.0, "shot": -237500.0, "tail": 0.0, "kanko": 0.0, "recovery": 0.6545454545454545, "tailShare": 0.0, "months": ["Q2"], "cumA": [-237.5], "cumB": [-21.8], "qNetA": [-237.5], "qNetB": [-21.8], "itemsOut": [["スポーツ放映権料", 500.0], ["スポーツ中継制作費", 160.7], ["出演料(解説・コメンテーター)", 25.7], ["番組プロモーション費", 1.0], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["タイム広告収入", 450.0]], "breakEven": null}, {"id": "TVA-23A5DE76D63E", "name": "日 23:15-24:10 2025年4月クール〜2026年1月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "C", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 175312.5, "spendB": 175312.5, "revA": 54880.502, "revB": 54880.502, "net": -120431.99799999999, "shot": -120431.99799999999, "tail": 0.0, "kanko": 0.0, "recovery": 0.31304386167557935, "tailShare": 0.0, "months": ["Q1", "Q3", "Q4"], "cumA": [-41.4, -82.4, -120.4], "cumB": [-41.4, -82.4, -120.4], "qNetA": [-41.4, -41.0, -38.1], "qNetB": [-41.4, -41.0, -38.1], "itemsOut": [["局内人件費配賦", 95.9], ["制作委託費", 43.6], ["出演料(主要キャスト・レギュラー)", 26.1], ["スタジオ・設備費配賦", 8.7], ["番組プロモーション費", 0.9], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["スポット広告配賦", 32.4], ["タイム広告収入", 22.5]], "breakEven": null}, {"id": "TVA-31D14209597D", "name": "日 25:10-25:40 2025年4月クール〜2026年1月クール作品", "fic": 0, "genre": "SPORTS", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 0.0, "spendB": 0.0, "revA": 22500.0, "revB": 22500.0, "net": 22500.0, "shot": 22500.0, "tail": 0.0, "kanko": 0.0, "recovery": null, "tailShare": 0.0, "months": ["Q1", "Q3", "Q4"], "cumA": [7.5, 15.0, 22.5], "cumB": [7.5, 15.0, 22.5], "qNetA": [7.5, 7.5, 7.5], "qNetB": [7.5, 7.5, 7.5], "itemsOut": [], "itemsIn": [["タイム広告収入", 22.5]], "breakEven": "常時黒字"}, {"id": "TVA-42318710AC56", "name": "日 25:40-25:55 FY2025レギュラー", "fic": 0, "genre": "SPORTS", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 625000.0, "spendB": 625000.0, "revA": 30000.0, "revB": 131569.578, "net": -595000.0, "shot": -595000.0, "tail": 0.0, "kanko": 0.0, "recovery": 0.048, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-148.8, -297.5, -446.2, -595.0], "cumB": [-127.0, -247.6, -373.8, -493.4], "qNetA": [-148.8, -148.8, -148.8, -148.8], "qNetB": [-127.0, -120.5, -126.3, -119.6], "itemsOut": [["スポーツ中継制作費", 535.8], ["出演料(解説・コメンテーター)", 85.7], ["番組プロモーション費", 3.2], ["音楽包括利用料配賦", 0.3]], "itemsIn": [["タイム広告収入", 30.0]], "breakEven": null}, {"id": "TVA-FE640B882DF2", "name": "日 25:55-27:25 FY2025レギュラー", "fic": 0, "genre": "SPORTS", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 625000.0, "spendB": 625000.0, "revA": 30000.0, "revB": 131569.578, "net": -595000.0, "shot": -595000.0, "tail": 0.0, "kanko": 0.0, "recovery": 0.048, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-148.8, -297.5, -446.2, -595.0], "cumB": [-127.0, -247.6, -373.8, -493.4], "qNetA": [-148.8, -148.8, -148.8, -148.8], "qNetB": [-127.0, -120.5, -126.3, -119.6], "itemsOut": [["スポーツ中継制作費", 535.8], ["出演料(解説・コメンテーター)", 85.7], ["番組プロモーション費", 3.2], ["音楽包括利用料配賦", 0.3]], "itemsIn": [["タイム広告収入", 30.0]], "breakEven": null}, {"id": "TVA-FC9EE0886DF5", "name": "月〜金 08:00-09:55 FY2025レギュラー", "fic": 0, "genre": "NEWS_INFO", "tier": "A", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 2047000.0, "spendB": 2047000.0, "revA": 2106815.95, "revB": 2106815.95, "net": 59815.950000000186, "shot": 59815.950000000186, "tail": 0.0, "kanko": 0.0, "recovery": 1.0292212750366392, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [3.8, 27.4, 33.5, 59.8], "cumB": [3.8, 27.4, 33.5, 59.8], "qNetA": [3.8, 23.5, 6.1, 26.3], "qNetB": [3.8, 23.5, 6.1, 26.3], "itemsOut": [["制作委託費", 686.1], ["局内人件費配賦", 571.8], ["出演料(主要キャスト・レギュラー)", 457.4], ["映像素材使用料(都度)", 228.7], ["スタジオ・設備費配賦", 91.5], ["番組プロモーション費", 10.5], ["その他", 1.0]], "itemsIn": [["タイム広告収入", 1800.0], ["スポット広告配賦", 306.8]], "breakEven": "常時黒字"}, {"id": "TVA-B687C6340B66", "name": "月〜金 10:25-13:00 FY2025レギュラー", "fic": 0, "genre": "NEWS_INFO", "tier": "A", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 2047000.0, "spendB": 2047000.0, "revA": 2106815.95, "revB": 2106815.95, "net": 59815.950000000186, "shot": 59815.950000000186, "tail": 0.0, "kanko": 0.0, "recovery": 1.0292212750366392, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [3.8, 27.4, 33.5, 59.8], "cumB": [3.8, 27.4, 33.5, 59.8], "qNetA": [3.8, 23.5, 6.1, 26.3], "qNetB": [3.8, 23.5, 6.1, 26.3], "itemsOut": [["制作委託費", 686.1], ["局内人件費配賦", 571.8], ["出演料(主要キャスト・レギュラー)", 457.4], ["映像素材使用料(都度)", 228.7], ["スタジオ・設備費配賦", 91.5], ["番組プロモーション費", 10.5], ["その他", 1.0]], "itemsIn": [["タイム広告収入", 1800.0], ["スポット広告配賦", 306.8]], "breakEven": "常時黒字"}, {"id": "TVA-151D9E6A4189", "name": "月〜金 13:00-13:30 FY2025レギュラー", "fic": 0, "genre": "EDUCATION", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 1837500.0, "spendB": 1837500.0, "revA": 593890.236, "revB": 593890.236, "net": -1243609.764, "shot": -1243609.764, "tail": 0.0, "kanko": 0.0, "recovery": 0.3232055706122449, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-316.1, -623.0, -938.0, -1243.6], "cumB": [-316.1, -623.0, -938.0, -1243.6], "qNetA": [-316.1, -306.9, -315.0, -305.6], "qNetB": [-316.1, -306.9, -315.0, -305.6], "itemsOut": [["制作委託費", 615.9], ["局内人件費配賦", 513.3], ["出演料(主要キャスト・レギュラー)", 410.6], ["映像素材使用料(都度)", 205.3], ["スタジオ・設備費配賦", 82.1], ["番組プロモーション費", 9.4], ["その他", 0.9]], "itemsIn": [["タイム広告収入", 450.0], ["スポット広告配賦", 143.9]], "breakEven": null}, {"id": "TVA-57EEB8D273F9", "name": "月〜金 16:48-19:00 FY2025レギュラー", "fic": 0, "genre": "NEWS_INFO", "tier": "C", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 308775.512, "spendB": 308775.512, "revA": 2026777.007, "revB": 2026777.007, "net": 1718001.495, "shot": 1718001.495, "tail": 0.0, "kanko": 0.0, "recovery": 6.563917565457717, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [421.3, 857.1, 1280.1, 1718.0], "cumB": [421.3, 857.1, 1280.1, 1718.0], "qNetA": [421.3, 435.8, 423.0, 437.9], "qNetB": [421.3, 435.8, 423.0, 437.9], "itemsOut": [["制作委託費", 103.5], ["局内人件費配賦", 86.3], ["出演料(主要キャスト・レギュラー)", 69.0], ["映像素材使用料(都度)", 34.5], ["スタジオ・設備費配賦", 13.8], ["番組プロモーション費", 1.6], ["その他", 0.1]], "itemsIn": [["タイム広告収入", 1800.0], ["スポット広告配賦", 226.8]], "breakEven": "常時黒字"}, {"id": "TVA-814775F98026", "name": "月 19:00-20:00 2025年4月クール〜2025年7月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 718750.0, "spendB": 718750.0, "revA": 1164774.203, "revB": 1164774.203, "net": 446024.203, "shot": 446024.203, "tail": 0.0, "kanko": 0.0, "recovery": 1.6205554128695652, "tailShare": 0.0, "months": ["Q1", "Q2"], "cumA": [195.9, 446.0], "cumB": [195.9, 446.0], "qNetA": [195.9, 250.1], "qNetB": [195.9, 250.1], "itemsOut": [["制作委託費", 481.0], ["出演料(主要キャスト・レギュラー)", 120.2], ["スタジオ・設備費配賦", 40.1], ["局内人件費配賦", 40.1], ["美術・セット費", 32.1], ["番組プロモーション費", 3.7], ["その他", 1.6]], "itemsIn": [["タイム広告収入", 750.0], ["スポット広告配賦", 414.8]], "breakEven": "常時黒字"}, {"id": "TVA-DB07514D6E1D", "name": "月 20:00-21:00 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 718750.0, "spendB": 718750.0, "revA": 1116889.615, "revB": 1116889.615, "net": 398139.615, "shot": 398139.615, "tail": 0.0, "kanko": 0.0, "recovery": 1.5539333773913044, "tailShare": 0.0, "months": ["Q1", "Q3"], "cumA": [195.9, 398.1], "cumB": [195.9, 398.1], "qNetA": [195.9, 202.2], "qNetB": [195.9, 202.2], "itemsOut": [["制作委託費", 481.0], ["出演料(主要キャスト・レギュラー)", 120.2], ["スタジオ・設備費配賦", 40.1], ["局内人件費配賦", 40.1], ["美術・セット費", 32.1], ["番組プロモーション費", 3.7], ["その他", 1.6]], "itemsIn": [["タイム広告収入", 750.0], ["スポット広告配賦", 366.9]], "breakEven": "常時黒字"}, {"id": "TVA-65A16D0E97F7", "name": "月 21:00-21:54 2025年4月クール作品", "fic": 0, "genre": "EDUCATION", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 312500.0, "spendB": 312500.0, "revA": 477506.208, "revB": 477506.208, "net": 165006.20799999998, "shot": 165006.20799999998, "tail": 0.0, "kanko": 0.0, "recovery": 1.5280198656, "tailShare": 0.0, "months": ["Q1"], "cumA": [165.0], "cumB": [165.0], "qNetA": [165.0], "qNetB": [165.0], "itemsOut": [["制作委託費", 209.1], ["出演料(主要キャスト・レギュラー)", 52.3], ["スタジオ・設備費配賦", 17.4], ["局内人件費配賦", 17.4], ["美術・セット費", 13.9], ["番組プロモーション費", 1.6], ["その他", 0.7]], "itemsIn": [["タイム広告収入", 375.0], ["スポット広告配賦", 102.5]], "breakEven": "常時黒字"}, {"id": "TVA-A5E2E964D6DD", "name": "月〜金 21:54-23:10 FY2025レギュラー", "fic": 0, "genre": "NEWS_INFO", "tier": "A", "mgmt": "B.年間ベルト型", "conf": "D", "spendA": 3680000.0, "spendB": 3680000.0, "revA": 2551579.237, "revB": 2551579.237, "net": -1128420.7629999998, "shot": -1128420.7629999998, "tail": 0.0, "kanko": 0.0, "recovery": 0.6933639230978261, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-302.1, -568.8, -866.8, -1128.4], "cumB": [-302.1, -568.8, -866.8, -1128.4], "qNetA": [-302.1, -266.7, -298.0, -261.6], "qNetB": [-302.1, -266.7, -298.0, -261.6], "itemsOut": [["局内人件費配賦", 1829.7], ["支局・取材網維持費配賦", 686.1], ["中継・緊急対応費", 571.8], ["ニュース素材契約費配賦", 343.1], ["スタジオ・設備費配賦", 228.7], ["番組プロモーション費", 18.8], ["その他", 1.7]], "itemsIn": [["タイム広告収入", 2000.0], ["スポット広告配賦", 551.6]], "breakEven": null}, {"id": "TVA-7A8E2DEF8BA5", "name": "月 23:15-23:45 2025年10月クール〜2026年1月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "D", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 96250.0, "spendB": 96250.0, "revA": 33773.317, "revB": 33773.317, "net": -62476.683, "shot": -62476.683, "tail": 0.0, "kanko": 0.0, "recovery": 0.3508916051948052, "tailShare": 0.0, "months": ["Q3", "Q4"], "cumA": [-32.5, -62.5], "cumB": [-32.5, -62.5], "qNetA": [-32.5, -30.0], "qNetB": [-32.5, -30.0], "itemsOut": [["局内人件費配賦", 52.6], ["制作委託費", 23.9], ["出演料(主要キャスト・レギュラー)", 14.4], ["スタジオ・設備費配賦", 4.8], ["番組プロモーション費", 0.5], ["音楽包括利用料配賦", 0.0]], "itemsIn": [["スポット広告配賦", 18.8], ["タイム広告収入", 15.0]], "breakEven": null}, {"id": "TVA-5C653FF26E07", "name": "月 23:15-23:45 2025年4月クール〜2025年7月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "C", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 116875.0, "spendB": 116875.0, "revA": 170382.951, "revB": 170382.951, "net": 53507.951, "shot": -79825.382, "tail": 133333.333, "kanko": 0.0, "recovery": 1.4578220406417113, "tailShare": 0.7825509079250541, "months": ["Q1", "Q2"], "cumA": [-41.4, 53.5], "cumB": [-41.4, 53.5], "qNetA": [-41.4, 94.9], "qNetB": [-41.4, 94.9], "itemsOut": [["局内人件費配賦", 63.9], ["制作委託費", 29.1], ["出演料(主要キャスト・レギュラー)", 17.4], ["スタジオ・設備費配賦", 5.8], ["番組プロモーション費", 0.6], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["全世界SVOD一括ライセンス", 133.3], ["スポット広告配賦", 22.0], ["タイム広告収入", 15.0]], "breakEven": "Q2"}, {"id": "TVA-8E60573C3A0A", "name": "月 23:45-24:15 FY2025レギュラー", "fic": 0, "genre": "ENTERTAINMENT", "tier": "D", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 192500.0, "spendB": 192500.0, "revA": 66931.826, "revB": 66931.826, "net": -125568.174, "shot": -125568.174, "tail": 0.0, "kanko": 0.0, "recovery": 0.34769779740259743, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-32.7, -63.1, -95.5, -125.6], "cumB": [-32.7, -63.1, -95.5, -125.6], "qNetA": [-32.7, -30.4, -32.5, -30.0], "qNetB": [-32.7, -30.4, -32.5, -30.0], "itemsOut": [["局内人件費配賦", 105.3], ["制作委託費", 47.9], ["出演料(主要キャスト・レギュラー)", 28.7], ["スタジオ・設備費配賦", 9.6], ["番組プロモーション費", 1.0], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["スポット広告配賦", 36.9], ["タイム広告収入", 30.0]], "breakEven": null}, {"id": "TVA-46F1C5887F7B", "name": "D型スポーツイベント枠02 2025年7月クール作品", "fic": 0, "genre": "SPORTS", "tier": "B", "mgmt": "D.イベントプロジェクト型", "conf": "A", "spendA": 562500.0, "spendB": 562500.0, "revA": 450000.0, "revB": 665662.424, "net": -112500.0, "shot": -112500.0, "tail": 0.0, "kanko": 0.0, "recovery": 0.8, "tailShare": 0.0, "months": ["Q2"], "cumA": [-112.5], "cumB": [103.2], "qNetA": [-112.5], "qNetB": [103.2], "itemsOut": [["スポーツ放映権料", 500.0], ["スポーツ中継制作費", 53.6], ["出演料(解説・コメンテーター)", 8.6], ["番組プロモーション費", 0.3], ["音楽包括利用料配賦", 0.0]], "itemsIn": [["タイム広告収入", 450.0]], "breakEven": null}, {"id": "TVA-AB2912054C31", "name": "木 19:00-20:00 2025年4月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 359375.0, "spendB": 359375.0, "revA": 555290.331, "revB": 555290.331, "net": 195915.331, "shot": 195915.331, "tail": 0.0, "kanko": 0.0, "recovery": 1.545155703652174, "tailShare": 0.0, "months": ["Q1"], "cumA": [195.9], "cumB": [195.9], "qNetA": [195.9], "qNetB": [195.9], "itemsOut": [["制作委託費", 240.5], ["出演料(主要キャスト・レギュラー)", 60.1], ["スタジオ・設備費配賦", 20.0], ["局内人件費配賦", 20.0], ["美術・セット費", 16.0], ["番組プロモーション費", 1.8], ["その他", 0.8]], "itemsIn": [["タイム広告収入", 375.0], ["スポット広告配賦", 180.3]], "breakEven": "常時黒字"}, {"id": "TVA-AA4E94D69277", "name": "木 19:00-20:00 2025年10月クール〜2026年1月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 718750.0, "spendB": 718750.0, "revA": 1178817.571, "revB": 1178817.571, "net": 460067.571, "shot": 460067.571, "tail": 0.0, "kanko": 0.0, "recovery": 1.640094011826087, "tailShare": 0.0, "months": ["Q3", "Q4"], "cumA": [202.2, 460.1], "cumB": [202.2, 460.1], "qNetA": [202.2, 257.8], "qNetB": [202.2, 257.8], "itemsOut": [["制作委託費", 481.0], ["出演料(主要キャスト・レギュラー)", 120.2], ["スタジオ・設備費配賦", 40.1], ["局内人件費配賦", 40.1], ["美術・セット費", 32.1], ["番組プロモーション費", 3.7], ["その他", 1.6]], "itemsIn": [["タイム広告収入", 750.0], ["スポット広告配賦", 428.8]], "breakEven": "常時黒字"}, {"id": "TVA-6C32EF50DDE6", "name": "木 20:00-20:54 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "EDUCATION", "tier": "B", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 625000.0, "spendB": 625000.0, "revA": 958599.446, "revB": 958599.446, "net": 333599.446, "shot": 333599.446, "tail": 0.0, "kanko": 0.0, "recovery": 1.5337591136, "tailShare": 0.0, "months": ["Q1", "Q3"], "cumA": [165.0, 333.6], "cumB": [165.0, 333.6], "qNetA": [165.0, 168.6], "qNetB": [165.0, 168.6], "itemsOut": [["制作委託費", 418.3], ["出演料(主要キャスト・レギュラー)", 104.6], ["スタジオ・設備費配賦", 34.9], ["局内人件費配賦", 34.9], ["美術・セット費", 27.9], ["番組プロモーション費", 3.2], ["その他", 1.4]], "itemsIn": [["タイム広告収入", 750.0], ["スポット広告配賦", 208.6]], "breakEven": "常時黒字"}, {"id": "TVA-ECC14D50D6A5", "name": "木 21:00-21:54 2026年1月クール作品", "fic": 0, "genre": "DRAMA", "tier": "A", "mgmt": "A.クール管理型", "conf": "D", "spendA": 414000.0, "spendB": 414000.0, "revA": 422218.287, "revB": 422218.287, "net": 8218.287000000011, "shot": 8218.287000000011, "tail": 0.0, "kanko": 0.0, "recovery": 1.0198509347826088, "tailShare": 0.0, "months": ["Q4"], "cumA": [8.2], "cumB": [8.2], "qNetA": [8.2], "qNetB": [8.2], "itemsOut": [["制作委託費", 169.1], ["出演料(主要キャスト・レギュラー)", 61.3], ["出演料(主演)", 47.5], ["美術・セット費", 31.7], ["番組プロモーション費", 31.7], ["ロケ・技術費", 26.4], ["その他", 46.3]], "itemsIn": [["スポット広告配賦", 242.2], ["タイム広告収入", 180.0]], "breakEven": "常時黒字"}, {"id": "TVA-5D44707C0174", "name": "木 21:00-21:54 2025年7月クール作品", "fic": 0, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 360000.0, "spendB": 360000.0, "revA": 463899.019, "revB": 463899.019, "net": 103899.01899999997, "shot": 23899.01899999997, "tail": 80000.0, "kanko": 0.0, "recovery": 1.288608386111111, "tailShare": 0.17245132393780727, "months": ["Q2"], "cumA": [103.9], "cumB": [103.9], "qNetA": [103.9], "qNetB": [103.9], "itemsOut": [["制作委託費", 147.0], ["出演料(主要キャスト・レギュラー)", 53.3], ["出演料(主演)", 41.3], ["美術・セット費", 27.6], ["番組プロモーション費", 27.6], ["ロケ・技術費", 23.0], ["その他", 40.2]], "itemsIn": [["スポット広告配賦", 203.9], ["タイム広告収入", 180.0], ["全世界SVOD一括ライセンス", 80.0]], "breakEven": "常時黒字"}, {"id": "TVA-33BCFC05BF32", "name": "木 21:00-21:54 2025年10月クール作品", "fic": 0, "genre": "DRAMA", "tier": "S", "mgmt": "A.クール管理型", "conf": "D", "spendA": 468000.0, "spendB": 468000.0, "revA": 390938.321, "revB": 390938.321, "net": -77061.679, "shot": -77061.679, "tail": 0.0, "kanko": 0.0, "recovery": 0.8353382927350427, "tailShare": 0.0, "months": ["Q3"], "cumA": [-77.1], "cumB": [-77.1], "qNetA": [-77.1], "qNetB": [-77.1], "itemsOut": [["制作委託費", 191.1], ["出演料(主要キャスト・レギュラー)", 69.3], ["出演料(主演)", 53.8], ["美術・セット費", 35.8], ["番組プロモーション費", 35.8], ["ロケ・技術費", 29.9], ["その他", 52.3]], "itemsIn": [["スポット広告配賦", 210.9], ["タイム広告収入", 180.0]], "breakEven": null}, {"id": "TVA-6A7865A214EB", "name": "木 21:00-21:54 2025年4月クール作品", "fic": 0, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 360000.0, "spendB": 360000.0, "revA": 416774.201, "revB": 416774.201, "net": 56774.201, "shot": -23225.799, "tail": 80000.0, "kanko": 0.0, "recovery": 1.1577061138888889, "tailShare": 0.19195046096435323, "months": ["Q1"], "cumA": [56.8], "cumB": [56.8], "qNetA": [56.8], "qNetB": [56.8], "itemsOut": [["制作委託費", 147.0], ["出演料(主要キャスト・レギュラー)", 53.3], ["出演料(主演)", 41.3], ["美術・セット費", 27.6], ["番組プロモーション費", 27.6], ["ロケ・技術費", 23.0], ["その他", 40.2]], "itemsIn": [["タイム広告収入", 180.0], ["スポット広告配賦", 156.8], ["全世界SVOD一括ライセンス", 80.0]], "breakEven": "常時黒字"}, {"id": "TVA-87DB36156EF0", "name": "木 23:15-24:15 FY2025レギュラー", "fic": 0, "genre": "ENTERTAINMENT", "tier": "C", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 233750.0, "spendB": 233750.0, "revA": 74845.79, "revB": 74845.79, "net": -158904.21000000002, "shot": -158904.21000000002, "tail": 0.0, "kanko": 0.0, "recovery": 0.3201958930481283, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-41.4, -79.8, -120.8, -158.9], "cumB": [-41.4, -79.8, -120.8, -158.9], "qNetA": [-41.4, -38.5, -41.0, -38.1], "qNetB": [-41.4, -38.5, -41.0, -38.1], "itemsOut": [["局内人件費配賦", 127.8], ["制作委託費", 58.1], ["出演料(主要キャスト・レギュラー)", 34.9], ["スタジオ・設備費配賦", 11.6], ["番組プロモーション費", 1.2], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["スポット広告配賦", 44.8], ["タイム広告収入", 30.0]], "breakEven": null}, {"id": "TVA-39715D99379B", "name": "火・木 23:45-24:15 FY2025レギュラー", "fic": 0, "genre": "ENTERTAINMENT", "tier": "C", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 233750.0, "spendB": 233750.0, "revA": 341512.457, "revB": 341512.457, "net": 107762.457, "shot": -158904.21000000002, "tail": 266666.667, "kanko": 0.0, "recovery": 1.4610158588235294, "tailShare": 0.780840234474961, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-41.4, -79.8, -120.8, 107.8], "cumB": [-41.4, -79.8, -120.8, 107.8], "qNetA": [-41.4, -38.5, -41.0, 228.6], "qNetB": [-41.4, -38.5, -41.0, 228.6], "itemsOut": [["局内人件費配賦", 127.8], ["制作委託費", 58.1], ["出演料(主要キャスト・レギュラー)", 34.9], ["スタジオ・設備費配賦", 11.6], ["番組プロモーション費", 1.2], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["全世界SVOD一括ライセンス", 266.7], ["スポット広告配賦", 44.8], ["タイム広告収入", 30.0]], "breakEven": "Q4"}, {"id": "TVA-D40A8B981579", "name": "水 20:00-20:54 2025年4月クール〜2026年1月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 1078125.0, "spendB": 1078125.0, "revA": 1734107.902, "revB": 1734107.902, "net": 655982.902, "shot": 655982.902, "tail": 0.0, "kanko": 0.0, "recovery": 1.6084479091014492, "tailShare": 0.0, "months": ["Q1", "Q3", "Q4"], "cumA": [195.9, 398.1, 656.0], "cumB": [195.9, 398.1, 656.0], "qNetA": [195.9, 202.2, 257.8], "qNetB": [195.9, 202.2, 257.8], "itemsOut": [["制作委託費", 721.5], ["出演料(主要キャスト・レギュラー)", 180.4], ["スタジオ・設備費配賦", 60.1], ["局内人件費配賦", 60.1], ["美術・セット費", 48.1], ["番組プロモーション費", 5.5], ["その他", 2.4]], "itemsIn": [["タイム広告収入", 1125.0], ["スポット広告配賦", 609.1]], "breakEven": "常時黒字"}, {"id": "TVA-74AD0A4D93B4", "name": "水 19:00-20:00 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 718750.0, "spendB": 718750.0, "revA": 1116889.615, "revB": 1116889.615, "net": 398139.615, "shot": 398139.615, "tail": 0.0, "kanko": 0.0, "recovery": 1.5539333773913044, "tailShare": 0.0, "months": ["Q1", "Q3"], "cumA": [195.9, 398.1], "cumB": [195.9, 398.1], "qNetA": [195.9, 202.2], "qNetB": [195.9, 202.2], "itemsOut": [["制作委託費", 481.0], ["出演料(主要キャスト・レギュラー)", 120.2], ["スタジオ・設備費配賦", 40.1], ["局内人件費配賦", 40.1], ["美術・セット費", 32.1], ["番組プロモーション費", 3.7], ["その他", 1.6]], "itemsIn": [["タイム広告収入", 750.0], ["スポット広告配賦", 366.9]], "breakEven": "常時黒字"}, {"id": "TVA-277FFEA3B035", "name": "水 21:00-21:54 2025年7月クール作品", "fic": 0, "genre": "DRAMA", "tier": "A", "mgmt": "A.クール管理型", "conf": "D", "spendA": 414000.0, "spendB": 414000.0, "revA": 414483.872, "revB": 414483.872, "net": 483.8719999999739, "shot": 483.8719999999739, "tail": 0.0, "kanko": 0.0, "recovery": 1.00116877294686, "tailShare": 0.0, "months": ["Q2"], "cumA": [0.5], "cumB": [0.5], "qNetA": [0.5], "qNetB": [0.5], "itemsOut": [["制作委託費", 169.1], ["出演料(主要キャスト・レギュラー)", 61.3], ["出演料(主演)", 47.5], ["美術・セット費", 31.7], ["番組プロモーション費", 31.7], ["ロケ・技術費", 26.4], ["その他", 46.3]], "itemsIn": [["スポット広告配賦", 234.5], ["タイム広告収入", 180.0]], "breakEven": "常時黒字"}, {"id": "TVA-2AB5EACD634E", "name": "水 21:00-21:54 2025年4月クール作品", "fic": 0, "genre": "DRAMA", "tier": "A", "mgmt": "A.クール管理型", "conf": "D", "spendA": 414000.0, "spendB": 414000.0, "revA": 360290.331, "revB": 360290.331, "net": -53709.668999999994, "shot": -53709.668999999994, "tail": 0.0, "kanko": 0.0, "recovery": 0.8702665, "tailShare": 0.0, "months": ["Q1"], "cumA": [-53.7], "cumB": [-53.7], "qNetA": [-53.7], "qNetB": [-53.7], "itemsOut": [["制作委託費", 169.1], ["出演料(主要キャスト・レギュラー)", 61.3], ["出演料(主演)", 47.5], ["美術・セット費", 31.7], ["番組プロモーション費", 31.7], ["ロケ・技術費", 26.4], ["その他", 46.3]], "itemsIn": [["スポット広告配賦", 180.3], ["タイム広告収入", 180.0]], "breakEven": null}, {"id": "TVA-C9658045DF6D", "name": "水 21:00-21:54 2025年10月クール〜2026年1月クール作品", "fic": 0, "genre": "DRAMA", "tier": "S", "mgmt": "A.クール管理型", "conf": "D", "spendA": 936000.0, "spendB": 936000.0, "revA": 844750.297, "revB": 844750.297, "net": -91249.70299999998, "shot": -91249.70299999998, "tail": 0.0, "kanko": 0.0, "recovery": 0.9025110010683761, "tailShare": 0.0, "months": ["Q3", "Q4"], "cumA": [-77.1, -91.2], "cumB": [-77.1, -91.2], "qNetA": [-77.1, -14.2], "qNetB": [-77.1, -14.2], "itemsOut": [["制作委託費", 382.2], ["出演料(主要キャスト・レギュラー)", 138.6], ["出演料(主演)", 107.5], ["美術・セット費", 71.7], ["番組プロモーション費", 71.7], ["ロケ・技術費", 59.7], ["その他", 104.6]], "itemsIn": [["スポット広告配賦", 484.8], ["タイム広告収入", 360.0]], "breakEven": null}, {"id": "TVA-9C31DD1B2AC4", "name": "水 23:15-23:45 FY2025レギュラー", "fic": 0, "genre": "ENTERTAINMENT", "tier": "D", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 192500.0, "spendB": 192500.0, "revA": 66931.826, "revB": 66931.826, "net": -125568.174, "shot": -125568.174, "tail": 0.0, "kanko": 0.0, "recovery": 0.34769779740259743, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-32.7, -63.1, -95.5, -125.6], "cumB": [-32.7, -63.1, -95.5, -125.6], "qNetA": [-32.7, -30.4, -32.5, -30.0], "qNetB": [-32.7, -30.4, -32.5, -30.0], "itemsOut": [["局内人件費配賦", 105.3], ["制作委託費", 47.9], ["出演料(主要キャスト・レギュラー)", 28.7], ["スタジオ・設備費配賦", 9.6], ["番組プロモーション費", 1.0], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["スポット広告配賦", 36.9], ["タイム広告収入", 30.0]], "breakEven": null}, {"id": "TVA-3E639573EB66", "name": "水 23:45-24:15 2025年4月クール作品", "fic": 0, "genre": "ANIME", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 192000.0, "spendB": 192000.0, "revA": 178666.667, "revB": 178666.667, "net": -13333.333000000013, "shot": -192000.0, "tail": 178666.667, "kanko": 0.0, "recovery": 0.9305555572916666, "tailShare": 1.0, "months": ["Q1"], "cumA": [-13.3], "cumB": [-13.3], "qNetA": [-13.3], "qNetB": [-13.3], "itemsOut": [["製作委員会出資金", 166.7], ["番組プロモーション費", 21.0], ["配信追加権利処理費", 4.2], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["全世界SVOD一括ライセンス", 106.7], ["製作委員会分配金", 42.0], ["電波料収入", 30.0]], "breakEven": null}, {"id": "TVA-53366287D38B", "name": "水 23:45-24:15 2025年10月クール作品", "fic": 0, "genre": "ANIME", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 192000.0, "spendB": 192000.0, "revA": 79200.0, "revB": 79200.0, "net": -112800.0, "shot": -192000.0, "tail": 79200.0, "kanko": 0.0, "recovery": 0.4125, "tailShare": 1.0, "months": ["Q3"], "cumA": [-112.8], "cumB": [-112.8], "qNetA": [-112.8], "qNetB": [-112.8], "itemsOut": [["製作委員会出資金", 166.7], ["番組プロモーション費", 21.0], ["配信追加権利処理費", 4.2], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["製作委員会分配金", 42.0], ["電波料収入", 30.0], ["配信ライセンス(国内独占)", 7.2]], "breakEven": null}, {"id": "TVA-E880CE0ABB46", "name": "水 23:45-24:15 2025年7月クール〜2026年1月クール作品", "fic": 0, "genre": "ANIME", "tier": "S", "mgmt": "A.クール管理型", "conf": "D", "spendA": 499200.0, "spendB": 499200.0, "revA": 533333.333, "revB": 533333.333, "net": 34133.332999999984, "shot": -499200.0, "tail": 533333.333, "kanko": 0.0, "recovery": 1.0683760677083334, "tailShare": 1.0, "months": ["Q2", "Q4"], "cumA": [-249.6, 34.1], "cumB": [-249.6, 34.1], "qNetA": [-249.6, 283.7], "qNetB": [-249.6, 283.7], "itemsOut": [["製作委員会出資金", 433.3], ["番組プロモーション費", 54.7], ["配信追加権利処理費", 10.9], ["音楽包括利用料配賦", 0.2]], "itemsIn": [["全世界SVOD一括ライセンス", 533.3]], "breakEven": "Q4"}, {"id": "TVA-5C722321D0E7", "name": "D型スポーツイベント枠04 2026年1月クール作品", "fic": 0, "genre": "SPORTS", "tier": "A", "mgmt": "D.イベントプロジェクト型", "conf": "B", "spendA": 535937.5, "spendB": 535937.5, "revA": 929778.529, "revB": 706192.418, "net": 393841.029, "shot": 393841.029, "tail": 0.0, "kanko": 0.0, "recovery": 1.7348637275801748, "tailShare": 0.0, "months": ["Q4"], "cumA": [393.8], "cumB": [170.3], "qNetA": [393.8], "qNetB": [170.3], "itemsOut": [["スポーツ放映権料", 500.0], ["スポーツ中継制作費", 30.8], ["出演料(解説・コメンテーター)", 4.9], ["番組プロモーション費", 0.2], ["音楽包括利用料配賦", 0.0]], "itemsIn": [["スポット広告配賦", 479.8], ["タイム広告収入", 450.0]], "breakEven": "常時黒字"}, {"id": "TVA-B2A8C93B54E5", "name": "D型スポーツイベント枠03 2025年10月クール作品", "fic": 0, "genre": "SPORTS", "tier": "A", "mgmt": "D.イベントプロジェクト型", "conf": "B", "spendA": 535937.5, "spendB": 535937.5, "revA": 823198.567, "revB": 647364.627, "net": 287261.06700000004, "shot": 287261.06700000004, "tail": 0.0, "kanko": 0.0, "recovery": 1.535997326180758, "tailShare": 0.0, "months": ["Q3"], "cumA": [287.3], "cumB": [111.4], "qNetA": [287.3], "qNetB": [111.4], "itemsOut": [["スポーツ放映権料", 500.0], ["スポーツ中継制作費", 30.8], ["出演料(解説・コメンテーター)", 4.9], ["番組プロモーション費", 0.2], ["音楽包括利用料配賦", 0.0]], "itemsIn": [["タイム広告収入", 450.0], ["スポット広告配賦", 373.2]], "breakEven": "常時黒字"}, {"id": "TVA-C9185F59F32B", "name": "火 19:00-20:00 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 718750.0, "spendB": 718750.0, "revA": 1116889.615, "revB": 1116889.615, "net": 398139.615, "shot": 398139.615, "tail": 0.0, "kanko": 0.0, "recovery": 1.5539333773913044, "tailShare": 0.0, "months": ["Q1", "Q3"], "cumA": [195.9, 398.1], "cumB": [195.9, 398.1], "qNetA": [195.9, 202.2], "qNetB": [195.9, 202.2], "itemsOut": [["制作委託費", 481.0], ["出演料(主要キャスト・レギュラー)", 120.2], ["スタジオ・設備費配賦", 40.1], ["局内人件費配賦", 40.1], ["美術・セット費", 32.1], ["番組プロモーション費", 3.7], ["その他", 1.6]], "itemsIn": [["タイム広告収入", 750.0], ["スポット広告配賦", 366.9]], "breakEven": "常時黒字"}, {"id": "TVA-EFF93CD48B73", "name": "火 19:00-21:00 2025年4月クール〜2025年7月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 718750.0, "spendB": 718750.0, "revA": 1164774.203, "revB": 1164774.203, "net": 446024.203, "shot": 446024.203, "tail": 0.0, "kanko": 0.0, "recovery": 1.6205554128695652, "tailShare": 0.0, "months": ["Q1", "Q2"], "cumA": [195.9, 446.0], "cumB": [195.9, 446.0], "qNetA": [195.9, 250.1], "qNetB": [195.9, 250.1], "itemsOut": [["制作委託費", 481.0], ["出演料(主要キャスト・レギュラー)", 120.2], ["スタジオ・設備費配賦", 40.1], ["局内人件費配賦", 40.1], ["美術・セット費", 32.1], ["番組プロモーション費", 3.7], ["その他", 1.6]], "itemsIn": [["タイム広告収入", 750.0], ["スポット広告配賦", 414.8]], "breakEven": "常時黒字"}, {"id": "TVA-68CFDF2EA859", "name": "火 20:00-20:54 2025年10月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 359375.0, "spendB": 359375.0, "revA": 561599.284, "revB": 561599.284, "net": 202224.28399999999, "shot": 202224.28399999999, "tail": 0.0, "kanko": 0.0, "recovery": 1.5627110511304347, "tailShare": 0.0, "months": ["Q3"], "cumA": [202.2], "cumB": [202.2], "qNetA": [202.2], "qNetB": [202.2], "itemsOut": [["制作委託費", 240.5], ["出演料(主要キャスト・レギュラー)", 60.1], ["スタジオ・設備費配賦", 20.0], ["局内人件費配賦", 20.0], ["美術・セット費", 16.0], ["番組プロモーション費", 1.8], ["その他", 0.8]], "itemsIn": [["タイム広告収入", 375.0], ["スポット広告配賦", 186.6]], "breakEven": "常時黒字"}, {"id": "TVA-160CDBAD19F2", "name": "火 21:00-21:54 2025年10月クール作品", "fic": 0, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 360000.0, "spendB": 360000.0, "revA": 422260.247, "revB": 422260.247, "net": 62260.246999999974, "shot": -17739.753000000026, "tail": 80000.0, "kanko": 0.0, "recovery": 1.1729451305555554, "tailShare": 0.18945662199643437, "months": ["Q3"], "cumA": [62.3], "cumB": [62.3], "qNetA": [62.3], "qNetB": [62.3], "itemsOut": [["制作委託費", 147.0], ["出演料(主要キャスト・レギュラー)", 53.3], ["出演料(主演)", 41.3], ["美術・セット費", 27.6], ["番組プロモーション費", 27.6], ["ロケ・技術費", 23.0], ["その他", 40.2]], "itemsIn": [["タイム広告収入", 180.0], ["スポット広告配賦", 162.3], ["全世界SVOD一括ライセンス", 80.0]], "breakEven": "常時黒字"}, {"id": "TVA-D9E6A7A01E59", "name": "火 21:00-21:54 2026年1月クール作品", "fic": 0, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 360000.0, "spendB": 360000.0, "revA": 470624.597, "revB": 470624.597, "net": 110624.59700000001, "shot": 30624.59700000001, "tail": 80000.0, "kanko": 0.0, "recovery": 1.3072905472222223, "tailShare": 0.16998686534864646, "months": ["Q4"], "cumA": [110.6], "cumB": [110.6], "qNetA": [110.6], "qNetB": [110.6], "itemsOut": [["制作委託費", 147.0], ["出演料(主要キャスト・レギュラー)", 53.3], ["出演料(主演)", 41.3], ["美術・セット費", 27.6], ["番組プロモーション費", 27.6], ["ロケ・技術費", 23.0], ["その他", 40.2]], "itemsIn": [["スポット広告配賦", 210.6], ["タイム広告収入", 180.0], ["全世界SVOD一括ライセンス", 80.0]], "breakEven": "常時黒字"}, {"id": "TVA-67E3D11868A7", "name": "火 21:00-21:54 2025年4月クール作品", "fic": 0, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 360000.0, "spendB": 360000.0, "revA": 336774.201, "revB": 336774.201, "net": -23225.799, "shot": -23225.799, "tail": 0.0, "kanko": 0.0, "recovery": 0.9354838916666667, "tailShare": 0.0, "months": ["Q1"], "cumA": [-23.2], "cumB": [-23.2], "qNetA": [-23.2], "qNetB": [-23.2], "itemsOut": [["制作委託費", 147.0], ["出演料(主要キャスト・レギュラー)", 53.3], ["出演料(主演)", 41.3], ["美術・セット費", 27.6], ["番組プロモーション費", 27.6], ["ロケ・技術費", 23.0], ["その他", 40.2]], "itemsIn": [["タイム広告収入", 180.0], ["スポット広告配賦", 156.8]], "breakEven": null}, {"id": "TVA-69EAC8F263FD", "name": "火 21:00-21:54 2025年7月クール作品", "fic": 0, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 360000.0, "spendB": 360000.0, "revA": 383899.019, "revB": 383899.019, "net": 23899.01899999997, "shot": 23899.01899999997, "tail": 0.0, "kanko": 0.0, "recovery": 1.0663861638888887, "tailShare": 0.0, "months": ["Q2"], "cumA": [23.9], "cumB": [23.9], "qNetA": [23.9], "qNetB": [23.9], "itemsOut": [["制作委託費", 147.0], ["出演料(主要キャスト・レギュラー)", 53.3], ["出演料(主演)", 41.3], ["美術・セット費", 27.6], ["番組プロモーション費", 27.6], ["ロケ・技術費", 23.0], ["その他", 40.2]], "itemsIn": [["スポット広告配賦", 203.9], ["タイム広告収入", 180.0]], "breakEven": "常時黒字"}, {"id": "TVA-ADBD18EC1C2B", "name": "火 23:15-23:45 FY2025レギュラー", "fic": 0, "genre": "ENTERTAINMENT", "tier": "C", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 233750.0, "spendB": 233750.0, "revA": 341512.457, "revB": 341512.457, "net": 107762.457, "shot": -158904.21000000002, "tail": 266666.667, "kanko": 0.0, "recovery": 1.4610158588235294, "tailShare": 0.780840234474961, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [-41.4, -79.8, -120.8, 107.8], "cumB": [-41.4, -79.8, -120.8, 107.8], "qNetA": [-41.4, -38.5, -41.0, 228.6], "qNetB": [-41.4, -38.5, -41.0, 228.6], "itemsOut": [["局内人件費配賦", 127.8], ["制作委託費", 58.1], ["出演料(主要キャスト・レギュラー)", 34.9], ["スタジオ・設備費配賦", 11.6], ["番組プロモーション費", 1.2], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["全世界SVOD一括ライセンス", 266.7], ["スポット広告配賦", 44.8], ["タイム広告収入", 30.0]], "breakEven": "Q4"}, {"id": "TVA-D7DB2D3D372F", "name": "火 23:45-24:15 2025年4月クール〜2025年7月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "C", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 116875.0, "spendB": 116875.0, "revA": 37049.618, "revB": 37049.618, "net": -79825.382, "shot": -79825.382, "tail": 0.0, "kanko": 0.0, "recovery": 0.31700207914438505, "tailShare": 0.0, "months": ["Q1", "Q2"], "cumA": [-41.4, -79.8], "cumB": [-41.4, -79.8], "qNetA": [-41.4, -38.5], "qNetB": [-41.4, -38.5], "itemsOut": [["局内人件費配賦", 63.9], ["制作委託費", 29.1], ["出演料(主要キャスト・レギュラー)", 17.4], ["スタジオ・設備費配賦", 5.8], ["番組プロモーション費", 0.6], ["音楽包括利用料配賦", 0.1]], "itemsIn": [["スポット広告配賦", 22.0], ["タイム広告収入", 15.0]], "breakEven": null}, {"id": "TVA-2A64D2202153", "name": "金 18:50-20:00 FY2025レギュラー", "fic": 0, "genre": "ENTERTAINMENT", "tier": "S", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 487500.0, "spendB": 487500.0, "revA": 637057.306, "revB": 637057.306, "net": 149557.30599999998, "shot": 149557.30599999998, "tail": 0.0, "kanko": 0.0, "recovery": 1.3067842174358975, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [30.6, 73.2, 105.2, 149.6], "cumB": [30.6, 73.2, 105.2, 149.6], "qNetA": [30.6, 42.6, 32.0, 44.3], "qNetB": [30.6, 42.6, 32.0, 44.3], "itemsOut": [["制作委託費", 163.4], ["局内人件費配賦", 136.2], ["出演料(主要キャスト・レギュラー)", 108.9], ["映像素材使用料(都度)", 54.5], ["スタジオ・設備費配賦", 21.8], ["番組プロモーション費", 2.5], ["その他", 0.2]], "itemsIn": [["タイム広告収入", 450.0], ["スポット広告配賦", 187.1]], "breakEven": "常時黒字"}, {"id": "TVA-2D854218BD02", "name": "金 20:00-20:54 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 1078125.0, "spendB": 1078125.0, "revA": 1726373.487, "revB": 1726373.487, "net": 648248.487, "shot": 648248.487, "tail": 0.0, "kanko": 0.0, "recovery": 1.6012739589565217, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3"], "cumA": [195.9, 446.0, 648.2], "cumB": [195.9, 446.0, 648.2], "qNetA": [195.9, 250.1, 202.2], "qNetB": [195.9, 250.1, 202.2], "itemsOut": [["制作委託費", 721.5], ["出演料(主要キャスト・レギュラー)", 180.4], ["スタジオ・設備費配賦", 60.1], ["局内人件費配賦", 60.1], ["美術・セット費", 48.1], ["番組プロモーション費", 5.5], ["その他", 2.4]], "itemsIn": [["タイム広告収入", 1125.0], ["スポット広告配賦", 601.4]], "breakEven": "常時黒字"}, {"id": "TVA-B19025B93032", "name": "金 21:00-21:54 2025年4月クール〜2025年10月クール作品", "fic": 0, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "D", "spendA": 1078125.0, "spendB": 1078125.0, "revA": 1726373.487, "revB": 1726373.487, "net": 648248.487, "shot": 648248.487, "tail": 0.0, "kanko": 0.0, "recovery": 1.6012739589565217, "tailShare": 0.0, "months": ["Q1", "Q2", "Q3"], "cumA": [195.9, 446.0, 648.2], "cumB": [195.9, 446.0, 648.2], "qNetA": [195.9, 250.1, 202.2], "qNetB": [195.9, 250.1, 202.2], "itemsOut": [["制作委託費", 721.5], ["出演料(主要キャスト・レギュラー)", 180.4], ["スタジオ・設備費配賦", 60.1], ["局内人件費配賦", 60.1], ["美術・セット費", 48.1], ["番組プロモーション費", 5.5], ["その他", 2.4]], "itemsIn": [["タイム広告収入", 1125.0], ["スポット広告配賦", 601.4]], "breakEven": "常時黒字"}, {"id": "TVA-B04C16422E60", "name": "金 23:15-24:15 2025年7月クール作品", "fic": 0, "genre": "DRAMA", "tier": "C", "mgmt": "A.クール管理型", "conf": "D", "spendA": 122400.0, "spendB": 122400.0, "revA": 142664.16, "revB": 142664.16, "net": 20264.160000000003, "shot": -27735.839999999997, "tail": 48000.0, "kanko": 0.0, "recovery": 1.165556862745098, "tailShare": 0.3364545096680203, "months": ["Q2"], "cumA": [20.3], "cumB": [20.3], "qNetA": [20.3], "qNetB": [20.3], "itemsOut": [["制作委託費", 50.0], ["出演料(主要キャスト・レギュラー)", 18.1], ["出演料(主演)", 14.1], ["美術・セット費", 9.4], ["番組プロモーション費", 9.4], ["ロケ・技術費", 7.8], ["その他", 13.7]], "itemsIn": [["タイム広告収入", 72.0], ["全世界SVOD一括ライセンス", 48.0], ["スポット広告配賦", 22.7]], "breakEven": "常時黒字"}, {"id": "TVA-D5EE90A42D04", "name": "金 23:15-24:15 2025年10月クール作品", "fic": 0, "genre": "DRAMA", "tier": "C", "mgmt": "A.クール管理型", "conf": "D", "spendA": 122400.0, "spendB": 122400.0, "revA": 138035.85, "revB": 138035.85, "net": 15635.850000000006, "shot": -32364.149999999994, "tail": 48000.0, "kanko": 0.0, "recovery": 1.1277438725490196, "tailShare": 0.3477357512559237, "months": ["Q3"], "cumA": [15.6], "cumB": [15.6], "qNetA": [15.6], "qNetB": [15.6], "itemsOut": [["制作委託費", 50.0], ["出演料(主要キャスト・レギュラー)", 18.1], ["出演料(主演)", 14.1], ["美術・セット費", 9.4], ["番組プロモーション費", 9.4], ["ロケ・技術費", 7.8], ["その他", 13.7]], "itemsIn": [["タイム広告収入", 72.0], ["全世界SVOD一括ライセンス", 48.0], ["スポット広告配賦", 18.0]], "breakEven": "常時黒字"}, {"id": "TVA-348F6E6530A8", "name": "金 23:15-24:15 2026年1月クール作品", "fic": 0, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 144000.0, "spendB": 144000.0, "revA": 179543.217, "revB": 179543.217, "net": 35543.217000000004, "shot": -44456.782999999996, "tail": 80000.0, "kanko": 0.0, "recovery": 1.2468278958333334, "tailShare": 0.4455751731350564, "months": ["Q4"], "cumA": [35.5], "cumB": [35.5], "qNetA": [35.5], "qNetB": [35.5], "itemsOut": [["制作委託費", 58.8], ["出演料(主要キャスト・レギュラー)", 21.3], ["出演料(主演)", 16.5], ["美術・セット費", 11.0], ["番組プロモーション費", 11.0], ["ロケ・技術費", 9.2], ["その他", 16.1]], "itemsIn": [["全世界SVOD一括ライセンス", 80.0], ["タイム広告収入", 72.0], ["スポット広告配賦", 27.5]], "breakEven": "常時黒字"}, {"id": "TVA-0FD183AB209F", "name": "金 23:15-24:15 2025年4月クール作品", "fic": 0, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "D", "spendA": 144000.0, "spendB": 144000.0, "revA": 146501.242, "revB": 146501.242, "net": 2501.2419999999984, "shot": -51498.758, "tail": 54000.0, "kanko": 0.0, "recovery": 1.0173697361111111, "tailShare": 0.3685975576916952, "months": ["Q1"], "cumA": [2.5], "cumB": [2.5], "qNetA": [2.5], "qNetB": [2.5], "itemsOut": [["制作委託費", 58.8], ["出演料(主要キャスト・レギュラー)", 21.3], ["出演料(主演)", 16.5], ["美術・セット費", 11.0], ["番組プロモーション費", 11.0], ["ロケ・技術費", 9.2], ["その他", 16.1]], "itemsIn": [["タイム広告収入", 72.0], ["製作委員会分配金", 31.5], ["電波料収入", 22.5], ["スポット広告配賦", 20.5]], "breakEven": "常時黒字"}, {"id": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "genre": "DRAMA", "tier": "A", "mgmt": "A.クール管理型", "conf": "E", "spendA": 462900.0, "spendB": 419000.0, "revA": 271428.571, "revB": 300000.0, "net": -191471.429, "shot": -191471.429, "tail": 0.0, "kanko": 7500.0, "recovery": 0.5863654590624325, "tailShare": 0.0, "months": ["Q1"], "cumA": [-191.5], "cumB": [-119.0], "qNetA": [-191.5], "qNetB": [-119.0], "itemsOut": [["制作委託費", 186.0], ["出演料(主要キャスト・レギュラー)", 67.4], ["出演料(主演)", 52.3], ["美術・セット費", 34.9], ["番組プロモーション費", 34.9], ["ロケ・技術費", 29.1], ["その他", 58.4]], "itemsIn": [["タイム広告収入", 180.0], ["スポット広告配賦", 91.4]], "breakEven": null}, {"id": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "genre": "DRAMA", "tier": "B", "mgmt": "A.クール管理型", "conf": "E", "spendA": 240000.0, "spendB": 360000.0, "revA": 200000.0, "revB": 300000.0, "net": -40000.0, "shot": -40000.0, "tail": 0.0, "kanko": 0.0, "recovery": 0.8333333333333334, "tailShare": 0.0, "months": ["Q2"], "cumA": [-40.0], "cumB": [-60.0], "qNetA": [-40.0], "qNetB": [-60.0], "itemsOut": [["制作委託費", 98.0], ["出演料(主要キャスト・レギュラー)", 35.5], ["出演料(主演)", 27.6], ["美術・セット費", 18.4], ["番組プロモーション費", 18.4], ["ロケ・技術費", 15.3], ["その他", 26.8]], "itemsIn": [["タイム広告収入", 120.0], ["スポット広告配賦", 80.0]], "breakEven": null}, {"id": "FIC-03", "name": "架空 金曜20時バラエティ枠（フォーマット輸出モデル）", "fic": 1, "genre": "ENTERTAINMENT", "tier": "A", "mgmt": "C.シーズン・レギュラー型", "conf": "E", "spendA": 1437500.0, "spendB": 1437500.0, "revA": 1809500.0, "revB": 1808000.0, "net": 372000.0, "shot": 362500.0, "tail": 9500.0, "kanko": 0.0, "recovery": 1.2587826086956522, "tailShare": 0.005250069079856314, "months": ["Q1", "Q2", "Q3", "Q4"], "cumA": [90.6, 181.3, 271.9, 372.0], "cumB": [90.6, 181.3, 271.9, 370.5], "qNetA": [90.6, 90.6, 90.6, 100.1], "qNetB": [90.6, 90.6, 90.6, 98.6], "itemsOut": [["制作委託費", 962.0], ["出演料(主要キャスト・レギュラー)", 240.5], ["スタジオ・設備費配賦", 80.2], ["局内人件費配賦", 80.2], ["美術・セット費", 64.1], ["番組プロモーション費", 7.4], ["その他", 3.2]], "itemsIn": [["タイム広告収入", 1500.0], ["スポット広告配賦", 300.0], ["海外番組販売(地域別)", 9.5]], "breakEven": "常時黒字"}], "variance": [{"pid": "TVA-42318710AC56", "name": "日 25:40-25:55 FY2025レギュラー", "fic": 0, "q": "Q1", "item": "スポット広告配賦", "flow": "収入", "b": 21707.2, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-42318710AC56", "name": "日 25:40-25:55 FY2025レギュラー", "fic": 0, "q": "Q2", "item": "スポット広告配賦", "flow": "収入", "b": 28232.2, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-42318710AC56", "name": "日 25:40-25:55 FY2025レギュラー", "fic": 0, "q": "Q3", "item": "スポット広告配賦", "flow": "収入", "b": 22466.8, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-42318710AC56", "name": "日 25:40-25:55 FY2025レギュラー", "fic": 0, "q": "Q4", "item": "スポット広告配賦", "flow": "収入", "b": 29163.4, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-46F1C5887F7B", "name": "D型スポーツイベント枠02 2025年7月クール作品", "fic": 0, "q": "Q2", "item": "スポット広告配賦", "flow": "収入", "b": 215662.4, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-5C722321D0E7", "name": "D型スポーツイベント枠04 2026年1月クール作品", "fic": 0, "q": "Q4", "item": "スポット広告配賦", "flow": "収入", "b": 256192.4, "a": 479778.5, "diff": 223586.1, "kanko": "通常", "type": "objective", "rank": "D", "note": "金額はモデル推計。L005配賦。実績=予算×実績個人÷計画個人"}, {"pid": "TVA-A2BD63BBA520", "name": "土 25:00-25:30 2025年4月クール〜2026年1月クール作品", "fic": 0, "q": "Q1", "item": "スポット広告配賦", "flow": "収入", "b": 21707.2, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-A2BD63BBA520", "name": "土 25:00-25:30 2025年4月クール〜2026年1月クール作品", "fic": 0, "q": "Q3", "item": "スポット広告配賦", "flow": "収入", "b": 22466.8, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-A2BD63BBA520", "name": "土 25:00-25:30 2025年4月クール〜2026年1月クール作品", "fic": 0, "q": "Q4", "item": "スポット広告配賦", "flow": "収入", "b": 29163.4, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-B2A8C93B54E5", "name": "D型スポーツイベント枠03 2025年10月クール作品", "fic": 0, "q": "Q3", "item": "スポット広告配賦", "flow": "収入", "b": 197364.6, "a": 373198.6, "diff": 175833.9, "kanko": "通常", "type": "objective", "rank": "D", "note": "金額はモデル推計。L005配賦。実績=予算×実績個人÷計画個人"}, {"pid": "TVA-B525E044E602", "name": "D型スポーツイベント枠01 2025年7月クール作品", "fic": 0, "q": "Q2", "item": "スポット広告配賦", "flow": "収入", "b": 215662.4, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-FE640B882DF2", "name": "日 25:55-27:25 FY2025レギュラー", "fic": 0, "q": "Q1", "item": "スポット広告配賦", "flow": "収入", "b": 21707.2, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-FE640B882DF2", "name": "日 25:55-27:25 FY2025レギュラー", "fic": 0, "q": "Q2", "item": "スポット広告配賦", "flow": "収入", "b": 28232.2, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-FE640B882DF2", "name": "日 25:55-27:25 FY2025レギュラー", "fic": 0, "q": "Q3", "item": "スポット広告配賦", "flow": "収入", "b": 22466.8, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "TVA-FE640B882DF2", "name": "日 25:55-27:25 FY2025レギュラー", "fic": 0, "q": "Q4", "item": "スポット広告配賦", "flow": "収入", "b": 29163.4, "a": null, "diff": null, "kanko": "通常", "type": "missing", "rank": "D", "note": "金額はモデル推計。L005配賦。実績視聴率欠損のためactual空欄・要確認"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "企画開発費", "flow": "支出", "b": 3170.0, "a": 3487.0, "diff": 317.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "原作オプション料", "flow": "支出", "b": 1056.7, "a": 1162.3, "diff": 105.7, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "【慣行】出演料事後決定差額", "flow": "支出", "b": 0.0, "a": 2500.0, "diff": 2500.0, "kanko": "慣行", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題9/10カバレッジ補完用。予算0・実績のみ計上。事後決定出演料差額"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "制作委託費", "flow": "支出", "b": 169065.9, "a": 185972.4, "diff": 16906.6, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "出演料(主演)", "flow": "支出", "b": 47549.8, "a": 52304.7, "diff": 4755.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "出演料(主要キャスト・レギュラー)", "flow": "支出", "b": 61286.4, "a": 67415.0, "diff": 6128.6, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "原作使用料", "flow": "支出", "b": 1902.0, "a": 2092.2, "diff": 190.2, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "脚本・構成費", "flow": "支出", "b": 7608.0, "a": 8368.8, "diff": 760.8, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "音楽制作費(劇伴)", "flow": "支出", "b": 3170.0, "a": 3487.0, "diff": 317.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "音楽包括利用料配賦", "flow": "支出", "b": 1268.0, "a": 1394.8, "diff": 126.8, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "美術・セット費", "flow": "支出", "b": 31699.8, "a": 34869.8, "diff": 3170.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "ロケ・技術費", "flow": "支出", "b": 26416.5, "a": 29058.2, "diff": 2641.7, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "ポストプロダクション費", "flow": "支出", "b": 21133.2, "a": 23246.6, "diff": 2113.3, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "番組プロモーション費", "flow": "支出", "b": 31699.8, "a": 34869.8, "diff": 3170.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "スポット広告配賦", "flow": "収入", "b": 120000.0, "a": 91428.6, "diff": -28571.4, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・視聴率未達または収入期間短縮のモデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "配信追加権利処理費", "flow": "支出", "b": 3170.0, "a": 3487.0, "diff": 317.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-01", "name": "架空 木曜21時ドラマ枠（慣行取引モデル）", "fic": 1, "q": "Q1", "item": "二次利用報酬(再放送等)", "flow": "支出", "b": 3804.0, "a": 4184.4, "diff": 380.4, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "企画開発費", "flow": "支出", "b": 2756.5, "a": 1837.7, "diff": -918.8, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "原作オプション料", "flow": "支出", "b": 918.8, "a": 612.6, "diff": -306.3, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "制作委託費", "flow": "支出", "b": 147013.8, "a": 98009.2, "diff": -49004.6, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "出演料(主演)", "flow": "支出", "b": 41347.6, "a": 27565.1, "diff": -13782.5, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "出演料(主要キャスト・レギュラー)", "flow": "支出", "b": 53292.5, "a": 35528.3, "diff": -17764.2, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "原作使用料", "flow": "支出", "b": 1653.9, "a": 1102.6, "diff": -551.3, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "脚本・構成費", "flow": "支出", "b": 6615.6, "a": 4410.4, "diff": -2205.2, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "音楽制作費(劇伴)", "flow": "支出", "b": 2756.5, "a": 1837.7, "diff": -918.8, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "音楽包括利用料配賦", "flow": "支出", "b": 1102.6, "a": 735.1, "diff": -367.5, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "美術・セット費", "flow": "支出", "b": 27565.1, "a": 18376.7, "diff": -9188.4, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "ロケ・技術費", "flow": "支出", "b": 22970.9, "a": 15313.9, "diff": -7657.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "ポストプロダクション費", "flow": "支出", "b": 18376.7, "a": 12251.1, "diff": -6125.6, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "番組プロモーション費", "flow": "支出", "b": 27565.1, "a": 18376.7, "diff": -9188.4, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "タイム広告収入", "flow": "収入", "b": 180000.0, "a": 120000.0, "diff": -60000.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・実放送話数による収入期間の可視化"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "スポット広告配賦", "flow": "収入", "b": 120000.0, "a": 80000.0, "diff": -40000.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・視聴率未達または収入期間短縮のモデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "配信追加権利処理費", "flow": "支出", "b": 2756.5, "a": 1837.7, "diff": -918.8, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-02", "name": "架空 木曜21時ドラマ枠（打ち切りモデル）", "fic": 1, "q": "Q2", "item": "二次利用報酬(再放送等)", "flow": "支出", "b": 3307.8, "a": 2205.2, "diff": -1102.6, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題カバレッジ補完用の制作費モデル"}, {"pid": "FIC-03", "name": "架空 金曜20時バラエティ枠（フォーマット輸出モデル）", "fic": 1, "q": "Q4", "item": "海外番組販売(地域別)", "flow": "収入", "b": 8000.0, "a": 9500.0, "diff": 1500.0, "kanko": "通常", "type": "scenario", "rank": "E", "note": "金額はモデル推計。架空番組・課題8カバレッジ補完用。L011海外ライセンス純収入"}], "kankoRows": [{"pid": "FIC-01", "item": "【慣行】出演料事後決定差額", "q": "Q1", "b": 0.0, "a": 2500.0, "nature": "会計実績", "rank": "E", "note": "金額はモデル推計。架空番組・課題9/10カバレッジ補完用。予算0・実績のみ計上。事後決定出演料差額"}, {"pid": "FIC-01", "item": "【慣行】キープ拘束機会費用", "q": "Q1", "b": 0.0, "a": 0.0, "nature": "経済価値推計", "rank": "E", "note": "金額はモデル推計。架空番組・課題9/10カバレッジ補完用。計上ゼロ。holding fee市場換算=4500千円"}, {"pid": "FIC-01", "item": "【慣行】バーター出演(参考対価)", "q": "Q1", "b": 0.0, "a": 0.0, "nature": "経済価値推計", "rank": "E", "note": "金額はモデル推計。架空番組・課題9/10カバレッジ補完用。計上ゼロ。バーター出演市場換算=3000千円"}, {"pid": "FIC-01", "item": "【慣行】営業協力金配賦", "q": "Q1", "b": 5000.0, "a": 5000.0, "nature": "管理会計配賦", "rank": "E", "note": "金額はモデル推計。架空番組・課題9/10カバレッジ補完用。営業協力金を管理会計配賦で番組原価に顕在化"}], "counts": {"events": 2131, "variance_total": 50, "variance_fic": 35, "variance_real_obj": 2, "variance_real_missing": 13, "tail_zero": 60, "tail_pos": 27}}};
+let ACTIVE_YEAR = Object.keys(DATASETS).sort().slice(-1)[0];   /* 多年度対応：年度キー辞書。FY2023/FY2024を追加するとセレクタ自動表示 */
+function boot(){
+const DATA = DATASETS[ACTIVE_YEAR];
+["portfolio-chart","cf-chart","stage-chart"].forEach(id=>{const _c=(window.Chart&&Chart.getChart)?Chart.getChart(id):null;if(_c)_c.destroy();});
+const P = DATA.programs;
+const byId = Object.fromEntries(P.map(p=>[p.id,p]));
+/* ---- constants ---- */
+const GC = {ENTERTAINMENT:"#10b981",DRAMA:"#3b82f6",ANIME:"#f97316",NEWS_INFO:"#94a3b8",SPORTS:"#ef4444",EDUCATION:"#22d3ee",HERO:"#a855f7"};
+const GJP= {ENTERTAINMENT:"エンタメ",DRAMA:"ドラマ",ANIME:"アニメ",NEWS_INFO:"報道・情報",SPORTS:"スポーツ",EDUCATION:"教育",HERO:"ヒーロー"};
+const GENRES = Object.keys(GC);
+const TIERC = {S:"#e879f9",A:"#c084fc",B:"#a78bfa",C:"#8b5cf6",D:"#6d28d9"};   // 人気ティア（紫系）
+const CONFC = {A:"#22c55e",B:"#84cc16",C:"#eab308",D:"#f97316",E:"#ef4444"};   // 確度（信号系）— ティアと別配色
+const TIERS = ["S","A","B","C","D"], CONFS=["A","B","C","D","E"];
+const gridColor='rgba(255,255,255,0.08)', textColor='#94a3b8';
+Chart.defaults.font.family="'Plus Jakarta Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif";
+Chart.defaults.font.size=13; Chart.defaults.color=textColor;
+/* ---- formatters (values in 千円 unless noted) ---- */
+const OKU = v => (v>=0?"+":"▲")+(Math.abs(v)/100000).toFixed(1)+"億円";
+const OKU0= v => (Math.abs(v)/100000).toFixed(1)+"億円";
+const MJP = v => (v/1000).toLocaleString("ja-JP",{maximumFractionDigits:0});   // 千円→百万
+const KJP = v => v==null?"—":Math.round(v).toLocaleString("ja-JP");
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const tag = (cls,style,txt)=>`<span class="tagx ${cls}" ${style?`style="${style}"`:""}>${esc(txt)}</span>`;
+const gTag = g => tag("tag-genre",`background:${GC[g]}`,GJP[g]||g);
+const tTag = t => tag("tag-tier",`background:${TIERC[t]}`,"Tier "+t);
+const cTag = c => tag("tag-conf",`background:${CONFC[c]||"#64748b"}`,"確度"+c);
+const ficTag = ()=> tag("tag-fic","","架空・シナリオ再現");
+/* scenario notes: design intent of the 3 fictional programs (課題カバレッジ§5) */
+const SCEN = {
+ "FIC-01":"シナリオ再現（課題9・10）：慣行取引によるROI歪み＋予実管理不在による超過検知遅れを再現する専任番組。事後決定出演料・営業協力金配賦・キープ／バーター（計上ゼロ・市場換算注記）を含む。",
+ "FIC-02":"シナリオ再現（課題6系）：打ち切りモデル。制作費未消化（▲）と収入期間短縮による差異を再現する専任番組。",
+ "FIC-03":"シナリオ再現（課題8）：フォーマット輸出モデル。バラエティのフォーマット権販売による上振れシナリオを再現する専任番組。"};
+
+/* ================= KPI ================= */
+(function(){
+  const k=DATA.kpis;
+  document.getElementById("k-exp").textContent = OKU0(k.expense_actual_k_jpy);
+  document.getElementById("k-rev").textContent = OKU0(k.revenue_actual_k_jpy);
+  document.getElementById("k-net").textContent = OKU(k.net_actual_k_jpy);
+  document.getElementById("k-net-sub").textContent = "収入−支出（FY2025通期）";
+  document.getElementById("k-tail").textContent = OKU0(k.tail_revenue_k_jpy);
+  document.getElementById("k-tail-sub").textContent = `収入実績の${(k.tail_revenue_k_jpy/k.revenue_actual_k_jpy*100).toFixed(1)}%が放送後に発生`;
+})();
+
+/* ================= PORTFOLIO SCATTER ================= */
+let cPort=null, zoomMid=true, selectedPid=P[0].id;
+const shotsM = P.map(p=>p.shot/1000);
+const tailMaxM = Math.max(...P.map(p=>p.tail/1000));
+const bandH = tailMaxM*0.30;                      // 下帯の高さ（テール=0群）
+function jitter(pid){ let h=0; for(const ch of pid) h=(h*31+ch.charCodeAt(0))>>>0; return (h%1000)/1000; }
+function pct(arr,q){ const s=[...arr].sort((a,b)=>a-b); const i=(s.length-1)*q; const lo=Math.floor(i); return s[lo]+(s[Math.min(lo+1,s.length-1)]-s[lo])*(i-lo); }
+const bandLabelPlugin = {
+  id:"bandLabel",
+  afterDraw(chart){
+    const {ctx, chartArea, scales:{x,y}}=chart;
+    const y0=y.getPixelForValue(0), x0=x.getPixelForValue(0);
+    ctx.save();
+    // 損益分岐線（横・控えめな破線）
+    ctx.strokeStyle="rgba(148,163,184,0.35)"; ctx.lineWidth=1; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(chartArea.left,y0); ctx.lineTo(chartArea.right,y0); ctx.stroke();
+    ctx.setLineDash([]);
+    // テール境界線（縦・墨色＝他グリッドと同系色だが太く強調）
+    ctx.strokeStyle="rgba(148,163,184,0.55)"; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(x0,chartArea.top); ctx.lineTo(x0,chartArea.bottom); ctx.stroke();
+    // ラベル（墨色・無彩色）
+    ctx.font="700 11px 'Plus Jakarta Sans','Hiragino Kaku Gothic ProN',sans-serif";
+    ctx.fillStyle="rgba(148,163,184,0.85)";
+    ctx.textAlign="right"; ctx.fillText("← テール無し", x0-8, chartArea.top+14);
+    ctx.textAlign="left";  ctx.fillText("テール有り＝資産化 →", x0+8, chartArea.top+14);
+    ctx.restore();
+  }
+};
+function drawPortfolio(){
+  if(cPort)cPort.destroy();
+  const matchIds = new Set(filtered().map(p=>p.id));   // フィルタ該当（全件時は全87本）
+  const allOn = matchIds.size===P.length;              // 絞り込み無し＝ハイライト無効（全点通常表示）
+  const ds = GENRES.map(g=>{
+    const arr = P.filter(p=>p.genre===g);
+    const pts = arr.map(p=>({
+      x:p.tail/1000,          // 横＝テール収入（0＝テール無し／右に伸びるほど資産性）
+      y:p.shot/1000,          // 縦＝放送時点収支（ゼロ線＝損益分岐）
+      r:Math.max(4,Math.sqrt(Math.max(p.spendA,0)/1000)/4.2),
+      pid:p.id}));
+    const on = p => allOn || matchIds.has(p.id);
+    return {label:`${GJP[g]}`, data:pts,
+      backgroundColor: arr.map(p=> p.id===selectedPid ? GC[g]+"dd" : on(p) ? GC[g]+"66" : "rgba(148,163,184,0.10)"),
+      borderColor:     arr.map(p=> p.id===selectedPid ? "#ffffff"   : on(p) ? GC[g]         : "rgba(148,163,184,0.30)"),
+      borderWidth:     arr.map(p=> p.id===selectedPid ? 3           : on(p) ? 1.4           : 0.8)};
+  });
+  const tailsPos=P.filter(p=>p.tail>0).map(p=>p.tail/1000);
+  const xMargin=(tailsPos.length?Math.max(...tailsPos):100)*0.03;   // x=0の縦列を見せる余白（全域時）
+  const fit = zoomMid && !allOn;                                    // 「選択にフィット」かつフィルタ該当あり
+  const focus = fit ? P.filter(p=>matchIds.has(p.id)) : P;          // 軸を合わせる対象＝該当番組
+  const rng=(vals,incZero)=>{ let lo=Math.min(...vals),hi=Math.max(...vals);
+    if(incZero){lo=Math.min(lo,0);hi=Math.max(hi,0);}              // テール境界(0)は常に画面内へ
+    if(hi===lo){const p=Math.max(Math.abs(hi)*0.5,50);return [lo-p,hi+p];}
+    const pad=(hi-lo)*0.10; return [lo-pad,hi+pad]; };
+  const [xLo,xHi]= fit? rng(focus.map(p=>p.tail/1000),true) : [-xMargin, undefined];
+  const [yLo,yHi]= fit? rng(focus.map(p=>p.shot/1000),true) : rng(shotsM,true);   // 損益分岐(0)を常に画面内に
+  cPort=new Chart(document.getElementById("portfolio-chart"),{type:"bubble",
+    data:{datasets:ds},
+    options:{maintainAspectRatio:false,
+      onClick:(e,els)=>{ if(els.length){ const el=els[0]; const pid=cPort.data.datasets[el.datasetIndex].data[el.index].pid; gotoKarte(pid); } },
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>{
+          const p=byId[c.raw.pid];
+          const l1=`${p.name}${p.fic? "【架空・シナリオ再現】":""}`;
+          const l2=`放送時点 ${MJP(p.shot)}百万／テール ${MJP(p.tail)}百万／支出 ${MJP(p.spendA)}百万`;
+          const l3=`Tier ${p.tier}・${GJP[p.genre]}・回収率 ${(p.recovery*100).toFixed(1)}%`;
+          return [l1,l2,l3];}}}},
+      scales:{
+        x:{title:{display:true,text:"テール収入（百万円）　0＝テール無し／右ほど資産性",color:textColor},
+           min: xLo, max: xHi,
+           grid:{color:gridColor}},
+        y:{title:{display:true,text:"放送時点収支（百万円）　ゼロ＝損益分岐",color:textColor},
+           min: yLo, max: yHi,
+           grid:{color:gridColor},
+           ticks:{callback:v=> v.toLocaleString()}}}},
+    plugins:[bandLabelPlugin]});
+}
+document.getElementById("zoom-all").onclick=()=>{zoomMid=false;setTog("zoom-all","zoom-mid");drawPortfolio();};
+document.getElementById("zoom-mid").onclick=()=>{zoomMid=true;setTog("zoom-mid","zoom-all");drawPortfolio();};
+function setTog(on,off){document.getElementById(on).classList.add("active");document.getElementById(off).classList.remove("active");}
+document.getElementById("genre-legend").innerHTML = GENRES.map(g=>{
+  const n=P.filter(p=>p.genre===g).length;
+  return `<span><span class="sw" style="background:${GC[g]}"></span>${GJP[g]} ${n}</span>`;}).join("");
+
+/* ================= LIST (filter/sort/paging) ================= */
+const flt={genres:new Set(),tiers:new Set(),fic:"all",pnl:"all",tail:"all",q:""};
+let sortKey="net", pageSize=20, shown=pageSize;
+function chipRow(elId, items, getLabel, onPick, isOn){
+  const el=document.getElementById(elId); el.innerHTML="";
+  items.forEach(it=>{
+    const c=document.createElement("span"); c.className="chip"+(isOn(it)?" on":"");
+    c.textContent=getLabel(it); c.onclick=()=>{onPick(it);renderAllFilters();shown=pageSize;renderList();drawPortfolio();};
+    el.appendChild(c);});
+}
+function renderAllFilters(){
+  chipRow("f-genre",GENRES,g=>GJP[g],g=>{flt.genres.has(g)?flt.genres.delete(g):flt.genres.add(g);},g=>flt.genres.has(g));
+  chipRow("f-pnl",["all","pos","neg"],v=>({all:"すべて",pos:"黒字",neg:"赤字"}[v]),v=>{flt.pnl=v;},v=>flt.pnl===v);
+  chipRow("f-tail",["all","has","zero"],v=>({all:"すべて",has:"テール有",zero:"テール無"}[v]),v=>{flt.tail=v;},v=>flt.tail===v);
+}
+function filtered(){
+  return P.filter(p=>
+    (flt.genres.size===0||flt.genres.has(p.genre)) &&
+    (flt.tiers.size===0||flt.tiers.has(p.tier)) &&
+    (flt.fic==="all"|| (flt.fic==="fic")===(p.fic===1)) &&
+    (flt.pnl==="all"|| (flt.pnl==="pos")===(p.net>=0)) &&
+    (flt.tail==="all"|| (flt.tail==="has")===(p.tail>0)) &&
+    (flt.q===""|| p.name.toLowerCase().includes(flt.q)|| p.id.toLowerCase().includes(flt.q)));
+}
+/* 列定義：num=数値／str=文字／tier/genre=独自序列。cmp は昇順比較。 */
+const tierRank=t=>TIERS.indexOf(t), genreRank=g=>GENRES.indexOf(g);
+const COLS=[
+  {key:"name",  label:"番組",         align:"left", def:1,  cmp:(a,b)=>a.name.localeCompare(b.name,"ja"),
+     cell:p=>`<span class="pt-nm">${esc(p.name)}</span>${p.fic?" "+ficTag():""}`},
+  {key:"genre", label:"ジャンル",     align:"left", def:1,  cmp:(a,b)=>genreRank(a.genre)-genreRank(b.genre), cell:p=>gTag(p.genre)},
+  {key:"spendA",label:"支出実績",     align:"right",def:-1, cmp:(a,b)=>a.spendA-b.spendA, cell:p=>MJP(p.spendA)},
+  {key:"shot",  label:"放送時点収支", align:"right",def:-1, cmp:(a,b)=>a.shot-b.shot,     cell:p=>`<span style="color:${p.shot>=0?'var(--accent-green)':'var(--accent-red)'}">${MJP(p.shot)}</span>`},
+  {key:"tail",  label:"テール収入",   align:"right",def:-1, cmp:(a,b)=>a.tail-b.tail,     cell:p=>p.tail>0?`<span style="color:var(--accent-cyan)">${MJP(p.tail)}</span>`:'<span style="color:var(--text-muted)">—</span>'},
+  {key:"net",   label:"通期収支",     align:"right",def:-1, cmp:(a,b)=>a.net-b.net,       cell:p=>`<b style="color:${p.net>=0?'var(--accent-green)':'var(--accent-red)'}">${OKU(p.net)}</b>`},
+  {key:"recovery",label:"回収率",     align:"right",def:-1, cmp:(a,b)=>a.recovery-b.recovery, cell:p=>(p.recovery*100).toFixed(0)+"%"}
+];
+const sortState={key:"net",dir:-1};
+function renderThead(){
+  const tr=document.getElementById("prog-thead"); tr.innerHTML="";
+  COLS.forEach(c=>{
+    const th=document.createElement("th");
+    th.className=(c.align==="right"?"num ":"")+"sortable"+(sortState.key===c.key?" sorted":"");
+    const ind=sortState.key===c.key?(sortState.dir===-1?" ▼":" ▲"):"";
+    th.innerHTML=esc(c.label)+`<span class="sort-ind">${ind}</span>`;
+    th.onclick=()=>{
+      if(sortState.key===c.key){sortState.dir*=-1;} else {sortState.key=c.key; sortState.dir=c.def;}
+      shown=pageSize; renderList();
+    };
+    tr.appendChild(th);
+  });
+}
+function renderList(){
+  const col=COLS.find(c=>c.key===sortState.key)||COLS.find(c=>c.key==="net")||COLS[0];
+  const arr=filtered().sort((a,b)=>sortState.dir*col.cmp(a,b));
+  document.getElementById("list-count").textContent=`（${arr.length} / ${P.length}本）`;
+  renderThead();
+  const el=document.getElementById("prog-list"); el.innerHTML="";
+  arr.slice(0,shown).forEach(p=>{
+    const tr=document.createElement("tr");
+    tr.className="prog-tr"+(p.id===selectedPid?" sel":"");
+    tr.innerHTML=COLS.map(c=>`<td class="${c.align==='right'?'num':''}">${c.cell(p)}</td>`).join("");
+    tr.onclick=()=>{gotoKarte(p.id);};
+    el.appendChild(tr);});
+  document.getElementById("list-more").style.display = shown<arr.length ? "" : "none";
+  document.getElementById("list-more").textContent = `さらに表示（残り${Math.max(arr.length-shown,0)}本）`;
+}
+document.getElementById("list-search").oninput=e=>{flt.q=e.target.value.trim().toLowerCase();shown=pageSize;renderList();drawPortfolio();};
+document.getElementById("list-more").onclick=()=>{shown+=30;renderList();};
+
+/* ========== ① 番組を選ぶ：曜日・時間帯・ジャンルで絞り→プルダウンで確定 ========== */
+const sel=document.getElementById("prog-selector");
+const DOW=["月","火","水","木","金","土","日","毎日","その他"];
+const BANDS=["早朝・午前","昼・夕方","ゴールデン","深夜","その他"];
+function dayOf(n){ if(n.startsWith("毎日"))return "毎日";
+  let m=n.match(/^([月火水木金土日])/); if(m)return m[1];
+  m=n.match(/([月火水木金土日])曜/); if(m)return m[1];   // 架空「○曜…」
+  return "その他"; }
+function hourOf(n){ const m=n.match(/(\d{1,2}):(\d{2})/)||n.match(/(\d{1,2})時/); return m?parseInt(m[1]):null; }
+function bandOf(n){ const h=hourOf(n); if(h==null)return "その他"; if(h<12)return "早朝・午前"; if(h<19)return "昼・夕方"; if(h<23)return "ゴールデン"; return "深夜"; }
+function schedKey(p){ const h=hourOf(p.name); return DOW.indexOf(dayOf(p.name))*10000+(h==null?9999:h)*100; }
+const selState={days:new Set(),bands:new Set(),genres:new Set(),sort:"sched"};
+const SEL_SORTS={sched:(a,b)=>schedKey(a)-schedKey(b),net:(a,b)=>b.net-a.net,tail:(a,b)=>b.tail-a.tail,spend:(a,b)=>b.spendA-a.spendA};
+function selFiltered(){ return P.filter(p=>
+  (selState.days.size===0||selState.days.has(dayOf(p.name))) &&
+  (selState.bands.size===0||selState.bands.has(bandOf(p.name))) &&
+  (selState.genres.size===0||selState.genres.has(p.genre))); }
+function selChips(elId,items,getLabel,isOn,onPick){
+  const el=document.getElementById(elId); if(!el)return; el.innerHTML="";
+  items.forEach(it=>{const c=document.createElement("span");c.className="chip"+(isOn(it)?" on":"");
+    c.textContent=getLabel(it); c.onclick=()=>{onPick(it);renderSelChips();renderSelector();}; el.appendChild(c);}); }
+function renderSelChips(){
+  const daysPresent=DOW.filter(d=>P.some(p=>dayOf(p.name)===d));
+  const bandsPresent=BANDS.filter(b=>P.some(p=>bandOf(p.name)===b));
+  selChips("s-day",daysPresent,d=>d,d=>selState.days.has(d),d=>{selState.days.has(d)?selState.days.delete(d):selState.days.add(d);});
+  selChips("s-band",bandsPresent,b=>b,b=>selState.bands.has(b),b=>{selState.bands.has(b)?selState.bands.delete(b):selState.bands.add(b);});
+  selChips("s-genre",GENRES,g=>GJP[g],g=>selState.genres.has(g),g=>{selState.genres.has(g)?selState.genres.delete(g):selState.genres.add(g);}); }
+function renderSelector(){
+  let arr=selFiltered().sort(SEL_SORTS[selState.sort]);
+  if(selectedPid && byId[selectedPid] && !arr.some(p=>p.id===selectedPid)) arr=[byId[selectedPid],...arr]; // 現在番組は常に候補に
+  sel.innerHTML="";
+  arr.forEach(p=>{const o=document.createElement("option");o.value=p.id;
+    o.textContent=(p.fic?"【架空】":"")+p.name+`　［${OKU(p.net)}］`; sel.appendChild(o);});
+  const c=document.getElementById("s-count"); if(c)c.textContent=`（該当 ${selFiltered().length} 本）`;
+  if(selectedPid && byId[selectedPid]) sel.value=selectedPid; }
+document.getElementById("s-sort").onchange=e=>{selState.sort=e.target.value;renderSelector();};
+sel.onchange=e=>selectProgram(e.target.value);
+renderSelChips(); renderSelector();
+
+/* ================= KARTE ================= */
+let cCF=null,cStage=null;
+function hbars(elId, items, color){
+  const el=document.getElementById(elId);
+  const mx=Math.max(...items.map(i=>Math.abs(i[1])),1);
+  el.innerHTML=items.map(i=>`<div class="hbar-row">
+    <span class="lbl" title="${esc(i[0])}">${esc(i[0])}</span>
+    <div class="hbar-track"><div class="hbar-fill" style="width:${Math.abs(i[1])/mx*100}%;background:${color}"></div></div>
+    <span class="hbar-val">${i[1].toLocaleString("ja-JP",{maximumFractionDigits:0})}百万</span></div>`).join("");
+}
+function evalSummary(p){
+  const rec=(p.recovery*100).toFixed(0);
+  let l1;
+  if(p.net>=0 && p.shot>=0) l1=`<b>収益性</b>：放送時点から通期まで黒字（通期 ${OKU(p.net)}／回収率 ${rec}%）。安定した稼ぎ頭。`;
+  else if(p.net>=0 && p.shot<0) l1=`<b>収益性</b>：放送時点は赤字だがテールで通期黒字に転換（通期 ${OKU(p.net)}／回収率 ${rec}%）。後追い回収型。`;
+  else l1=`<b>収益性</b>：通期赤字（${OKU(p.net)}／回収率 ${rec}%）。単独では未回収——全社便益・編成上の役割を含め評価が必要。`;
+  let l2;
+  if(p.tail>0) l2=`<b>資産性</b>：放送後にテール収入 ${OKU0(p.tail)}（総収入の ${(p.tailShare*100).toFixed(1)}%）を獲得＝IPとして資産化できている。`;
+  else l2=`<b>資産性</b>：テール収入なし＝放送時点で完結する旧来型。二次展開・IP化が今後の伸びしろ。`;
+  let l3;
+  if(p.shot>=0&&p.tail>0) l3=`<b>総合</b>：右上＝理想的なIP資産（放送で稼ぎ、放送後も資産化）。`;
+  else if(p.shot<0&&p.tail>0) l3=`<b>総合</b>：右下＝テールで回収する資産番組。`;
+  else if(p.shot>=0&&p.tail===0) l3=`<b>総合</b>：左上＝一発完結の稼ぎ頭。テール開拓が次の一手。`;
+  else l3=`<b>総合</b>：左下＝要注意（放送時点赤字・テールなし）。編成・コスト構造の見直し対象。`;
+  return [l1,l2,l3].map(t=>`<div class="es-line">${t}</div>`).join("");
+}
+function selectProgram(pid){
+  selectedPid=pid; const p=byId[pid]; if(!p)return;
+  renderSelector();
+  /* header */
+  document.getElementById("kh-name").textContent=p.name;
+  document.getElementById("kh-id").textContent=`番組ID：${p.id} ｜ 管理型：${p.mgmt||"—"}`;
+  document.getElementById("kh-genre").innerHTML=gTag(p.genre);
+  const sc=document.getElementById("kh-scenario");
+  if(p.fic){sc.style.display="";sc.innerHTML="🟡 "+esc(SCEN[p.id]||"シナリオ再現（架空番組）");}
+  else{sc.style.display="none";}
+  document.getElementById("kh-eval").innerHTML=evalSummary(p);
+  /* KPI */
+  const set=(id,v,c)=>{const e=document.getElementById(id);e.textContent=v;if(c!==undefined)e.style.color=c;};
+  set("d-net",OKU(p.net),p.net>=0?"var(--accent-green)":"var(--accent-red)");
+  set("d-shot",OKU(p.shot),p.shot>=0?"var(--accent-green)":"var(--accent-red)");
+  set("d-tail",p.tail>0?"+"+OKU0(p.tail):"0円","var(--accent-cyan)");
+  document.getElementById("d-tail-sub").textContent=p.tail>0?`総収入の${(p.tailShare*100).toFixed(1)}%が放送後に発生`:"テール行なし（展開事実なし＝DEC-20）";
+  set("d-rec",(p.recovery*100).toFixed(1)+"%",p.recovery>=1?"var(--accent-green)":"var(--accent-red)");
+  document.getElementById("d-rec-sub").textContent=p.recovery<1?"回収率100%未満＝直ちに「悪い番組」ではない（全社便益型あり）":"支出を上回る回収";
+  set("d-be", p.breakEven===null? "年度内未達" : p.breakEven==="常時黒字"? "常時黒字" : p.breakEven+"で転換");
+  /* CF chart */
+  if(cCF)cCF.destroy();
+  cCF=new Chart(document.getElementById("cf-chart"),{
+    data:{labels:p.months,
+      datasets:[
+        {type:"bar",label:"四半期純額（実績）",data:p.qNetA,
+         backgroundColor:p.qNetA.map(v=>v>=0?"rgba(16,185,129,0.5)":"rgba(239,68,68,0.5)"),
+         borderColor:p.qNetA.map(v=>v>=0?"#10b981":"#ef4444"),borderWidth:1,order:3},
+        {type:"line",label:"累積収支（実績）",data:p.cumA,borderColor:"#3b82f6",backgroundColor:"#3b82f6",
+         pointRadius:5,pointStyle:"circle",tension:0,order:1},
+        {type:"line",label:"累積収支（予算）",data:p.cumB,borderColor:"#94a3b8",borderDash:[6,4],
+         backgroundColor:"#94a3b8",pointRadius:4,pointStyle:"rect",tension:0,order:2}]},
+    options:{maintainAspectRatio:false,
+      plugins:{legend:{position:"bottom",labels:{boxWidth:10}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw.toLocaleString()}百万`}}},
+      scales:{x:{grid:{display:false}},
+        y:{title:{display:true,text:"百万円",color:textColor},
+           grid:{color:c=>c.tick.value===0?"rgba(148,163,184,0.5)":gridColor,lineWidth:c=>c.tick.value===0?2:1}}}}});
+  /* stage chart */
+  if(cStage)cStage.destroy();
+  cStage=new Chart(document.getElementById("stage-chart"),{type:"bar",
+    data:{labels:["放送時点収支","テール収入","通期収支"],
+      datasets:[{data:[p.shot/1000,p.tail/1000,p.net/1000],
+        backgroundColor:[p.shot>=0?"rgba(16,185,129,0.55)":"rgba(239,68,68,0.55)","rgba(34,211,238,0.55)",p.net>=0?"rgba(59,130,246,0.55)":"rgba(239,68,68,0.55)"],
+        borderColor:[p.shot>=0?"#10b981":"#ef4444","#22d3ee",p.net>=0?"#3b82f6":"#ef4444"],borderWidth:1.2}]},
+    options:{maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>`${c.raw.toLocaleString()}百万`}}},
+      scales:{x:{grid:{color:c=>c.tick.value===0?"rgba(148,163,184,0.5)":gridColor},title:{display:true,text:"百万円",color:textColor}},y:{grid:{display:false}}}}});
+  const sn=document.getElementById("d-struct-note");
+  if(p.shot<0&&p.net>=0) sn.textContent="📌 放送時点は赤字だが、テールが通期を黒字化する「育成回収型」。旧来の放送時点評価では見えない価値。";
+  else if(p.tail===0&&p.net>=0) sn.textContent="📌 放送時点で完結する黒字型。テール資産は持たない（展開事実なし）。";
+  else if(p.tail===0&&p.net<0) sn.textContent="📌 放送時点赤字・テールなし。全社便益（報道・編成価値）での正当化か、権利仕込みによるテール獲得が論点。";
+  else if(p.net<0) sn.textContent="📌 テールはあるが通期赤字。テールの厚みと契約条件が論点。";
+  else sn.textContent="📌 放送時点黒字＋テール上乗せの複層回収型。";
+  /* items */
+  hbars("items-out",p.itemsOut,"rgba(239,68,68,0.65)");
+  hbars("items-in",p.itemsIn,"rgba(16,185,129,0.65)");
+  /* struct cards */
+  const cards=[
+    ["🧮","回収率",(p.recovery*100).toFixed(1)+"%","収入÷支出（実績）"],
+    ["🌊","テール比率",(p.tailShare*100).toFixed(1)+"%","テール収入÷総収入"],
+    ["📡","放送時点損益",p.shot>=0?"黒字":"赤字","一次流通までの符号"],
+    ["⭐","人気ティア","Tier "+p.tier,"視聴率×配信×SNS合成（確度とは別）"],
+    ["🗂","管理型",p.mgmt? p.mgmt.split(".")[1]||p.mgmt :"—","PLM管理タイプ4分類"]];
+  document.getElementById("d-struct-cards").innerHTML=cards.map(c=>`
+    <div class="kpi-card"><div class="kpi-icon">${c[0]}</div><div class="kpi-data">
+      <span class="kpi-label">${c[1]}</span><span class="kpi-value" style="font-size:1.15rem">${esc(c[2])}</span>
+      <span class="kpi-subtext">${esc(c[3])}</span></div></div>`).join("");
+  renderList();
+  /* prev/next */
+}
+
+/* ================= VARIANCE (C-1) 架空のみ・横幅いっぱい ================= */
+(function(){
+  const fic=DATA.variance.filter(v=>v.fic);
+  const dcell=v=> v.diff===null? `<span class="tagx tag-missing">実績空欄</span>` : `<span class="${v.diff>=0?"pos":"neg"}">${v.diff>=0?"+":""}${KJP(v.diff)}</span>`;
+  let ficPick="all";
+  /* 数値列だけソート可能な見出しを描画（文字列列は非ソート） */
+  function sortHead(trId,cols,state,onSort){
+    const tr=document.getElementById(trId); tr.innerHTML="";
+    cols.forEach(c=>{ const th=document.createElement("th");
+      if(c.num){ th.className="num sortable"+(state.key===c.key?" sorted":"");
+        const ind=state.key===c.key?(state.dir===-1?" ▼":" ▲"):"";
+        th.innerHTML=esc(c.label)+`<span class="sort-ind">${ind}</span>`;
+        th.onclick=()=>{ if(state.key===c.key)state.dir*=-1; else {state.key=c.key;state.dir=-1;} onSort(); };
+      } else th.textContent=c.label;
+      tr.appendChild(th); });
+  }
+  const AGG_COLS=[{key:"item",label:"項目"},{key:"b",label:"予算(千円)",num:1},{key:"a",label:"実績(千円)",num:1},{key:"d",label:"差異(千円)",num:1},{key:"rate",label:"差異率",num:1}];
+  const aggSort={key:"d",dir:-1};
+  const FIC_COLS=[{key:"name",label:"番組"},{key:"q",label:"Q"},{key:"item",label:"項目"},{key:"b",label:"予算(千円)",num:1},{key:"a",label:"実績(千円)",num:1},{key:"diff",label:"差異(千円)",num:1},{key:"rate",label:"差異率",num:1}];
+  const ficSort={key:"diff",dir:-1};
+  const ficRate=v=> (v.b && v.diff!=null)? v.diff/Math.abs(v.b) : null;   // 差異率（小数）
+  const ficVal=(v,k)=> k==="rate"? ficRate(v) : v[k];
+  function renderAgg(){
+    const rows=fic.filter(v=>ficPick==="all"||v.pid===ficPick);
+    const byItem={};
+    rows.forEach(v=>{const o=byItem[v.item]=byItem[v.item]||{item:v.item,b:0,a:0,d:0,nul:false};
+      o.b+=v.b||0; o.a+=(v.a==null?0:v.a); o.d+=(v.diff==null?0:v.diff); if(v.diff==null)o.nul=true;});
+    const arr=Object.values(byItem).map(o=>({...o,rate:o.b?o.d/Math.abs(o.b):0}));
+    arr.sort((x,y)=>aggSort.dir*((x[aggSort.key]??0)-(y[aggSort.key]??0)));
+    sortHead("v-agg-thead",AGG_COLS,aggSort,renderAgg);
+    const tot=arr.reduce((t,o)=>({b:t.b+o.b,a:t.a+o.a,d:t.d+o.d}),{b:0,a:0,d:0});
+    const rate=(d,b)=>b?((d/Math.abs(b))*100).toFixed(1)+"%":"—";
+    const rateCell=(d,b)=> b? `<span class="${d>=0?'pos':'neg'}">${rate(d,b)}</span>` : rate(d,b);
+    const body=arr.map(o=>`<tr>
+      <td style="color:var(--text-primary)">${esc(o.item)}${o.nul?' <span class="tagx tag-missing">実績空欄含む</span>':''}</td>
+      <td class="num">${KJP(o.b)}</td><td class="num">${KJP(o.a)}</td>
+      <td class="num"><span class="${o.d>=0?'pos':'neg'}">${o.d>=0?'+':''}${KJP(o.d)}</span></td>
+      <td class="num">${rateCell(o.d,o.b)}</td></tr>`).join("");
+    const totRow=`<tr style="border-top:2px solid var(--border-color)"><td style="color:var(--text-primary);font-weight:700">合計（${arr.length}項目）</td>
+      <td class="num" style="font-weight:700">${KJP(tot.b)}</td><td class="num" style="font-weight:700">${KJP(tot.a)}</td>
+      <td class="num" style="font-weight:700"><span class="${tot.d>=0?'pos':'neg'}">${tot.d>=0?'+':''}${KJP(tot.d)}</span></td>
+      <td class="num" style="font-weight:700">${rateCell(tot.d,tot.b)}</td></tr>`;
+    document.querySelector("#v-agg-table tbody").innerHTML = arr.length? body+totRow : `<tr><td colspan="5" style="color:var(--text-muted)">差異なし</td></tr>`;
+  }
+  function renderFic(){
+    const rows=fic.filter(v=>ficPick==="all"||v.pid===ficPick).slice()
+      .sort((a,b)=>ficSort.dir*((ficVal(a,ficSort.key)??-Infinity)-(ficVal(b,ficSort.key)??-Infinity)));
+    sortHead("v-fic-thead",FIC_COLS,ficSort,renderFic);
+    document.querySelector("#v-fic-table tbody").innerHTML=rows.map(v=>{const r=ficRate(v);return `<tr>
+      <td style="color:var(--text-primary);font-weight:700">${esc((byId[v.pid]||{}).name||v.pid)}<br><span style="font-size:0.62rem;font-weight:400;color:var(--text-muted)">${esc(v.pid)}</span></td>
+      <td>${v.q}</td><td>${esc(v.item)}${v.kanko==="慣行"?' '+tag("tag-fic","","慣行"):""}</td>
+      <td class="num">${KJP(v.b)}</td><td class="num">${v.a===null?"—":KJP(v.a)}</td><td class="num">${dcell(v)}</td>
+      <td class="num">${r==null?"—":`<span class="${r>=0?'pos':'neg'}">${(r*100).toFixed(1)}%</span>`}</td></tr>`;}).join("");
+    const lbl=document.getElementById("v-fic-count-lbl"); if(lbl)lbl.textContent=`（差異 ${rows.length} 行）`;
+  }
+  const vsel=document.getElementById("vfic-selector");
+  const ficProgs=P.filter(p=>p.fic);
+  vsel.innerHTML=`<option value="all">全架空3本（まとめて表示）</option>`+ficProgs.map(p=>`<option value="${esc(p.id)}">${esc(p.id)}｜${esc(p.name)}</option>`).join("");
+  vsel.onchange=e=>{ficPick=e.target.value;renderAgg();renderFic();};
+  renderAgg(); renderFic();
+})();
+
+/* ================= KANKO ================= */
+document.querySelector("#kanko-table tbody").innerHTML=DATA.kankoRows.map(r=>`<tr>
+  <td style="color:var(--text-primary)">${esc(r.pid)} ${ficTag()}</td>
+  <td>${esc(r.item)}</td><td>${r.q}</td><td>${esc(r.nature)}</td>
+  <td class="num">${KJP(r.b)}</td><td class="num">${KJP(r.a)}</td>
+  <td>${cTag(r.rank)}</td><td style="max-width:340px">${esc(r.note)}</td></tr>`).join("");
+
+document.getElementById("footer-line").textContent=`© 2026 Naohisa Hashimoto’S Update date:2026/10/02`;
+
+/* ================= TABS ================= */
+function showTab(name){
+  document.querySelectorAll(".tab-big").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));
+  ["overview","karte","variance"].forEach(t=>{
+    document.getElementById("main-"+t).style.display = t===name? "" : "none";});
+  if(name==="overview"){drawPortfolio();}
+}
+/* 俯瞰の点・リストから飛ぶ時：カルテ詳細（番組名・評価サマリー）を最上部に */
+function gotoKarte(pid){
+  selectProgram(pid); showTab("karte");
+  const el=document.getElementById("karte-detail");
+  if(el&&el.scrollIntoView){ requestAnimationFrame(()=>el.scrollIntoView({behavior:"smooth",block:"start"})); }
+}
+document.querySelectorAll(".tab-big").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+/* ---- init ---- */
+renderAllFilters();
+renderList();
+drawPortfolio();
+selectProgram(P.slice().sort((a,b)=>b.net-a.net)[0].id);
+showTab("overview");
+/* ---- year selector (多年度対応) ---- */
+(function(){
+  const ys=document.getElementById("year-select"), wrap=document.getElementById("year-select-wrap");
+  if(!ys||!wrap)return;
+  const years=Object.keys(DATASETS);
+  ys.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join("");
+  ys.value=ACTIVE_YEAR;
+  wrap.style.display = years.length>1 ? "flex" : "none";
+  ys.onchange=e=>{ ACTIVE_YEAR=e.target.value; boot(); };
+})();
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+</script>
+</body>
+</html>
